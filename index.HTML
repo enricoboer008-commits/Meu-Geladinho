@@ -54,10 +54,10 @@
 
         .nav-btn {
             flex: 1;
-            padding: 10px 5px;
+            padding: 10px 2px;
             border: none;
             background: none;
-            font-size: 11px;
+            font-size: 10px;
             color: #666;
             cursor: pointer;
             display: flex;
@@ -66,7 +66,7 @@
             gap: 3px;
         }
 
-        .nav-btn .icon { font-size: 18px; }
+        .nav-btn .icon { font-size: 16px; }
 
         .nav-btn.active {
             color: var(--primary);
@@ -167,6 +167,37 @@
             border-bottom: 1px solid #eee;
             font-size: 13px;
         }
+
+        /* ESTILOS DA CALCULADORA */
+        .calc-display {
+            width: 100%;
+            height: 50px;
+            font-size: 22px;
+            text-align: right;
+            padding: 10px;
+            margin-bottom: 15px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .calc-btn {
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            background: #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .calc-btn.op { background: var(--secondary); color: white; }
+        .calc-btn.eq { background: #4CAF50; color: white; }
+        .calc-btn.clear { background: #f44336; color: white; }
     </style>
 </head>
 <body>
@@ -204,10 +235,20 @@
             </div>
         </div>
 
-        <div class="card-box">
-            <h3>💵 Lançamento Manual</h3>
-            <p style="font-size: 12px; color: #666;">Ganhou dinheiro fora do app? Adicione o valor para entrar nas contas.</p>
-            <button class="btn-primary" onclick="adicionarFaturamentoManual()">+ Adicionar Faturamento Anterior</button>
+        <!-- OPÇÕES AVANÇADAS ESCONDIDAS -->
+        <div style="text-align: center; margin-bottom: 15px;">
+            <button onclick="toggleOpcoesAvancadas()" style="background: none; border: none; color: #888; font-size: 12px; cursor: pointer; text-decoration: underline;">
+                ⚙️ Opções Avançadas de Ajuste Manual
+            </button>
+        </div>
+
+        <div id="painel-avancado" class="card-box" style="display: none; border: 1px dashed #ccc;">
+            <h3>💵 Lançamento Manual de Saldo</h3>
+            <p style="font-size: 12px; color: #666;">Ajuste o faturamento acumulado sem afetar o estoque.</p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-primary" onclick="adicionarFaturamentoManual()">+ Adicionar</button>
+                <button class="btn-primary" style="background-color: #f44336;" onclick="retirarFaturamentoManual()">- Retirar</button>
+            </div>
         </div>
 
         <div class="card-box">
@@ -271,6 +312,12 @@
                 </thead>
                 <tbody id="tabela-estoque"></tbody>
             </table>
+            
+            <div style="margin-top: 20px; padding: 12px; background: #e0f7fa; border-radius: 8px;">
+                <h4 style="margin: 0 0 5px 0; color: #006064;">📊 Resumo Total do Congelador:</h4>
+                <div style="font-size: 14px;">Total de Geladinhos: <strong id="total-qtd-estoque">0</strong> jujus</div>
+                <div style="font-size: 14px;">Valor em Dinheiro: <strong id="total-valor-estoque">R$ 0,00</strong></div>
+            </div>
         </div>
     </div>
 
@@ -296,6 +343,37 @@
         </div>
     </div>
 
+    <!-- CALCULADORA -->
+    <div id="tab-calc" class="tab-content">
+        <div class="card-box">
+            <h3>🧮 Calculadora Rápida</h3>
+            <input type="text" id="calc-display" class="calc-display" readonly value="0">
+            <div class="calc-grid">
+                <button class="calc-btn clear" onclick="calcClear()">C</button>
+                <button class="calc-btn op" onclick="calcInput('/')">÷</button>
+                <button class="calc-btn op" onclick="calcInput('*')">×</button>
+                <button class="calc-btn op" onclick="calcInput('-')">-</button>
+
+                <button class="calc-btn" onclick="calcInput('7')">7</button>
+                <button class="calc-btn" onclick="calcInput('8')">8</button>
+                <button class="calc-btn" onclick="calcInput('9')">9</button>
+                <button class="calc-btn op" onclick="calcInput('+')">+</button>
+
+                <button class="calc-btn" onclick="calcInput('4')">4</button>
+                <button class="calc-btn" onclick="calcInput('5')">5</button>
+                <button class="calc-btn" onclick="calcInput('6')">6</button>
+                <button class="calc-btn eq" onclick="calcSolve()" style="grid-row: span 2; height: 100%;">=</button>
+
+                <button class="calc-btn" onclick="calcInput('1')">1</button>
+                <button class="calc-btn" onclick="calcInput('2')">2</button>
+                <button class="calc-btn" onclick="calcInput('3')">3</button>
+
+                <button class="calc-btn" onclick="calcInput('0')" style="grid-column: span 2;">0</button>
+                <button class="calc-btn" onclick="calcInput('.')">.</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- MENU NAVEGAÇÃO INFERIOR -->
@@ -314,6 +392,9 @@
     </button>
     <button class="nav-btn" onclick="trocarAba('tab-reservas', this)">
         <span class="icon">📝</span>Reserva
+    </button>
+    <button class="nav-btn" onclick="trocarAba('tab-calc', this)">
+        <span class="icon">🧮</span>Calc
     </button>
 </div>
 
@@ -374,9 +455,13 @@
         if (abaId === 'tab-estoque') renderizarEstoque();
     }
 
+    function toggleOpcoesAvancadas() {
+        const p = document.getElementById('painel-avancado');
+        p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    }
+
     function processarEntradaFinanceira(valor) {
         window.dados.financeiro.faturamento += valor;
-
         let valorRestante = valor;
 
         // 1. Caixa Receita (Teto R$ 50)
@@ -403,6 +488,33 @@
         }
     }
 
+    function processarRetiradaFinanceira(valor) {
+        window.dados.financeiro.faturamento = Math.max(0, window.dados.financeiro.faturamento - valor);
+
+        let valorRetirar = valor;
+
+        // Retira do Lucro
+        if (window.dados.financeiro.lucro > 0) {
+            let abater = Math.min(window.dados.financeiro.lucro, valorRetirar);
+            window.dados.financeiro.lucro -= abater;
+            valorRetirar -= abater;
+        }
+
+        // Retira da Reserva
+        if (valorRetirar > 0 && window.dados.financeiro.reserva > 0) {
+            let abater = Math.min(window.dados.financeiro.reserva, valorRetirar);
+            window.dados.financeiro.reserva -= abater;
+            valorRetirar -= abater;
+        }
+
+        // Retira do Caixa Receita
+        if (valorRetirar > 0 && window.dados.financeiro.receitaCaixa > 0) {
+            let abater = Math.min(window.dados.financeiro.receitaCaixa, valorRetirar);
+            window.dados.financeiro.receitaCaixa -= abater;
+            valorRetirar -= abater;
+        }
+    }
+
     function atualizarInterface() {
         if (!window.dados) return;
 
@@ -414,7 +526,6 @@
         const lucroTotal = fin.lucro || 0;
         document.getElementById('lucro-total').innerText = `R$ ${lucroTotal.toFixed(2)}`;
         
-        // Divisão para Gabriel e Enrico
         const metadeLucro = lucroTotal / 2;
         document.getElementById('lucro-gabriel').innerText = `R$ ${metadeLucro.toFixed(2)}`;
         document.getElementById('lucro-enrico').innerText = `R$ ${metadeLucro.toFixed(2)}`;
@@ -438,7 +549,7 @@
     }
 
     function adicionarFaturamentoManual() {
-        const valor = parseFloat(prompt("Digite o valor já faturado em vendas anteriores (R$):"));
+        const valor = parseFloat(prompt("Digite o valor a adicionar (R$):"));
         if (isNaN(valor) || valor <= 0) return;
 
         processarEntradaFinanceira(valor);
@@ -446,16 +557,33 @@
         const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
         window.dados.historico.push({
             data: dataAtual,
-            descricao: "Lançamento Manual Anterior",
+            descricao: "Ajuste (+)",
             total: valor
         });
 
         window.salvarDados();
-        alert('✅ Valor adicionado ao faturamento com sucesso!');
+        alert('✅ Valor adicionado!');
+    }
+
+    function retirarFaturamentoManual() {
+        const valor = parseFloat(prompt("Digite o valor a retirar (R$):"));
+        if (isNaN(valor) || valor <= 0) return;
+
+        processarRetiradaFinanceira(valor);
+
+        const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+        window.dados.historico.push({
+            data: dataAtual,
+            descricao: "Ajuste (-)",
+            total: -valor
+        });
+
+        window.salvarDados();
+        alert('✅ Valor retirado!');
     }
 
     function excluirHistorico(idx) {
-        if (confirm("Deseja remover este registro do histórico? (Nota: Os valores do saldo já computados permanecerão intactos).")) {
+        if (confirm("Deseja remover este registro do histórico?")) {
             window.dados.historico.splice(idx, 1);
             window.salvarDados();
         }
@@ -542,13 +670,19 @@
 
         window.salvarDados();
         renderizarFormVenda();
-        alert('🎉 Venda registrada e valores distribuídos automaticamente!');
+        alert('🎉 Venda registrada com sucesso!');
     }
 
     function renderizarEstoque() {
         const tbody = document.getElementById('tabela-estoque');
         tbody.innerHTML = '';
+        let totalQtd = 0;
+        let totalValor = 0;
+
         window.dados.produtos.forEach((p, idx) => {
+            totalQtd += p.estoque;
+            totalValor += (p.estoque * p.preco);
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${p.nome}</strong></td>
@@ -562,6 +696,9 @@
             `;
             tbody.appendChild(tr);
         });
+
+        document.getElementById('total-qtd-estoque').innerText = totalQtd;
+        document.getElementById('total-valor-estoque').innerText = `R$ ${totalValor.toFixed(2)}`;
     }
 
     function reporEstoque(idx) {
@@ -723,6 +860,33 @@
             window.dados.reservas.splice(idx, 1);
             window.salvarDados();
             renderizarFormReserva();
+        }
+    }
+
+    /* FUNÇÕES DA CALCULADORA */
+    let calcVal = "0";
+
+    function calcInput(char) {
+        if (calcVal === "0" && char !== ".") {
+            calcVal = char;
+        } else {
+            calcVal += char;
+        }
+        document.getElementById('calc-display').value = calcVal;
+    }
+
+    function calcClear() {
+        calcVal = "0";
+        document.getElementById('calc-display').value = calcVal;
+    }
+
+    function calcSolve() {
+        try {
+            calcVal = String(eval(calcVal));
+            document.getElementById('calc-display').value = calcVal;
+        } catch (e) {
+            document.getElementById('calc-display').value = "Erro";
+            calcVal = "0";
         }
     }
 </script>
