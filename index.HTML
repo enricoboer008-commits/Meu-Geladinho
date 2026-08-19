@@ -87,7 +87,7 @@
 
         .cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
             gap: 10px;
             margin-bottom: 15px;
         }
@@ -100,7 +100,7 @@
         }
 
         .card-stat h4 { margin: 0; font-size: 11px; color: #006064; }
-        .card-stat p { margin: 5px 0 0 0; font-size: 16px; font-weight: bold; color: var(--primary); }
+        .card-stat p { margin: 5px 0 0 0; font-size: 15px; font-weight: bold; color: var(--primary); }
 
         .form-group { margin-bottom: 12px; }
         label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; }
@@ -157,6 +157,16 @@
         .btn-repor { background: #ff9800; }
         .btn-editar { background: #2196F3; }
         .btn-excluir { background: #f44336; }
+        .btn-concluir { background: #4CAF50; }
+
+        .historico-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -181,16 +191,30 @@
                 <p id="reserva-total">R$ 0,00 / 50</p>
             </div>
             <div class="card-stat">
-                <h4>Lucro Sócios</h4>
+                <h4>Lucro Total</h4>
                 <p id="lucro-total">R$ 0,00</p>
             </div>
         </div>
 
+        <div class="card-box" style="background: #e8f5e9;">
+            <h3>🤝 Divisão de Lucro dos Sócios</h3>
+            <div style="display: flex; justify-content: space-around; margin-top: 10px; font-weight: bold;">
+                <div>👦 Gabriel: <span id="lucro-gabriel" style="color: #2e7d32;">R$ 0,00</span></div>
+                <div>👦 Enrico: <span id="lucro-enrico" style="color: #2e7d32;">R$ 0,00</span></div>
+            </div>
+        </div>
+
+        <div class="card-box">
+            <h3>💵 Lançamento Manual</h3>
+            <p style="font-size: 12px; color: #666;">Ganhou dinheiro fora do app? Adicione o valor para entrar nas contas.</p>
+            <button class="btn-primary" onclick="adicionarFaturamentoManual()">+ Adicionar Faturamento Anterior</button>
+        </div>
+
         <div class="card-box">
             <h3>📜 Últimas Vendas</h3>
-            <ul id="lista-historico" style="padding-left:20px; font-size:13px; color:#555;">
-                <li>Nenhuma venda salva.</li>
-            </ul>
+            <div id="lista-historico">
+                <p style="font-size:13px; color:#555;">Nenhuma venda salva.</p>
+            </div>
         </div>
     </div>
 
@@ -350,6 +374,35 @@
         if (abaId === 'tab-estoque') renderizarEstoque();
     }
 
+    function processarEntradaFinanceira(valor) {
+        window.dados.financeiro.faturamento += valor;
+
+        let valorRestante = valor;
+
+        // 1. Caixa Receita (Teto R$ 50)
+        let faltaReceita = 50 - (window.dados.financeiro.receitaCaixa || 0);
+        if (faltaReceita > 0) {
+            let alocarReceita = Math.min(valorRestante, faltaReceita);
+            window.dados.financeiro.receitaCaixa = (window.dados.financeiro.receitaCaixa || 0) + alocarReceita;
+            valorRestante -= alocarReceita;
+        }
+
+        // 2. Reserva de Emergência (Teto R$ 50)
+        if (valorRestante > 0) {
+            let faltaReserva = 50 - (window.dados.financeiro.reserva || 0);
+            if (faltaReserva > 0) {
+                let alocarReserva = Math.min(valorRestante, faltaReserva);
+                window.dados.financeiro.reserva = (window.dados.financeiro.reserva || 0) + alocarReserva;
+                valorRestante -= alocarReserva;
+            }
+        }
+
+        // 3. Lucro dos Sócios
+        if (valorRestante > 0) {
+            window.dados.financeiro.lucro = (window.dados.financeiro.lucro || 0) + valorRestante;
+        }
+    }
+
     function atualizarInterface() {
         if (!window.dados) return;
 
@@ -357,18 +410,54 @@
         document.getElementById('fat-total').innerText = `R$ ${(fin.faturamento || 0).toFixed(2)}`;
         document.getElementById('receita-total').innerText = `R$ ${(fin.receitaCaixa || 0).toFixed(2)} / 50`;
         document.getElementById('reserva-total').innerText = `R$ ${(fin.reserva || 0).toFixed(2)} / 50`;
-        document.getElementById('lucro-total').innerText = `R$ ${(fin.lucro || 0).toFixed(2)}`;
+        
+        const lucroTotal = fin.lucro || 0;
+        document.getElementById('lucro-total').innerText = `R$ ${lucroTotal.toFixed(2)}`;
+        
+        // Divisão para Gabriel e Enrico
+        const metadeLucro = lucroTotal / 2;
+        document.getElementById('lucro-gabriel').innerText = `R$ ${metadeLucro.toFixed(2)}`;
+        document.getElementById('lucro-enrico').innerText = `R$ ${metadeLucro.toFixed(2)}`;
 
         const listaHist = document.getElementById('lista-historico');
         listaHist.innerHTML = '';
         if (!window.dados.historico || window.dados.historico.length === 0) {
-            listaHist.innerHTML = '<li>Nenhuma venda registrada ainda.</li>';
+            listaHist.innerHTML = '<p style="font-size:13px; color:#555;">Nenhuma venda registrada ainda.</p>';
         } else {
-            window.dados.historico.slice(-5).reverse().forEach(h => {
-                const li = document.createElement('li');
-                li.innerText = `[${h.data}] ${h.descricao} = R$ ${h.total.toFixed(2)}`;
-                listaHist.appendChild(li);
+            window.dados.historico.slice().reverse().forEach((h, indexInvertido) => {
+                const realIndex = window.dados.historico.length - 1 - indexInvertido;
+                const div = document.createElement('div');
+                div.className = 'historico-item';
+                div.innerHTML = `
+                    <span>[${h.data}] <strong>${h.descricao}</strong> = R$ ${h.total.toFixed(2)}</span>
+                    <button class="btn-action btn-excluir" onclick="excluirHistorico(${realIndex})">🗑️</button>
+                `;
+                listaHist.appendChild(div);
             });
+        }
+    }
+
+    function adicionarFaturamentoManual() {
+        const valor = parseFloat(prompt("Digite o valor já faturado em vendas anteriores (R$):"));
+        if (isNaN(valor) || valor <= 0) return;
+
+        processarEntradaFinanceira(valor);
+
+        const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+        window.dados.historico.push({
+            data: dataAtual,
+            descricao: "Lançamento Manual Anterior",
+            total: valor
+        });
+
+        window.salvarDados();
+        alert('✅ Valor adicionado ao faturamento com sucesso!');
+    }
+
+    function excluirHistorico(idx) {
+        if (confirm("Deseja remover este registro do histórico? (Nota: Os valores do saldo já computados permanecerão intactos).")) {
+            window.dados.historico.splice(idx, 1);
+            window.salvarDados();
         }
     }
 
@@ -442,33 +531,7 @@
             return;
         }
 
-        window.dados.financeiro.faturamento += faturamentoVenda;
-
-        // Distribuição automática inteligente do dinheiro
-        let valorRestante = faturamentoVenda;
-
-        // 1. Preencher Caixa da Receita Principal (Teto R$ 50)
-        let faltaReceita = 50 - (window.dados.financeiro.receitaCaixa || 0);
-        if (faltaReceita > 0) {
-            let alocarReceita = Math.min(valorRestante, faltaReceita);
-            window.dados.financeiro.receitaCaixa = (window.dados.financeiro.receitaCaixa || 0) + alocarReceita;
-            valorRestante -= alocarReceita;
-        }
-
-        // 2. Preencher Reserva de Emergência (Teto R$ 50)
-        if (valorRestante > 0) {
-            let faltaReserva = 50 - (window.dados.financeiro.reserva || 0);
-            if (faltaReserva > 0) {
-                let alocarReserva = Math.min(valorRestante, faltaReserva);
-                window.dados.financeiro.reserva = (window.dados.financeiro.reserva || 0) + alocarReserva;
-                valorRestante -= alocarReserva;
-            }
-        }
-
-        // 3. O restante vai integralmente para o Lucro dos Sócios
-        if (valorRestante > 0) {
-            window.dados.financeiro.lucro = (window.dados.financeiro.lucro || 0) + valorRestante;
-        }
+        processarEntradaFinanceira(faturamentoVenda);
 
         const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
         window.dados.historico.push({
@@ -558,12 +621,17 @@
         if (!window.dados.reservas || window.dados.reservas.length === 0) {
             divSalvas.innerHTML = '<p style="font-size:13px; color:#666;">Nenhuma reserva ativa.</p>';
         } else {
-            window.dados.reservas.forEach((res) => {
+            window.dados.reservas.forEach((res, idx) => {
                 const box = document.createElement('div');
-                box.style.cssText = "background:#f9f9f9; padding:10px; border-radius:6px; margin-top:8px;";
+                box.style.cssText = "background:#f9f9f9; padding:10px; border-radius:6px; margin-top:8px; border-left:4px solid var(--secondary);";
                 box.innerHTML = `
                     <strong>👤 ${res.cliente}</strong><br>
                     <small>${res.itens} - <strong>Total: R$ ${res.total.toFixed(2)}</strong></small>
+                    <div style="margin-top:8px;">
+                        <button class="btn-action btn-concluir" onclick="concluirReserva(${idx})">✅ Vender</button>
+                        <button class="btn-action btn-editar" onclick="editarReserva(${idx})">✏️ Editar</button>
+                        <button class="btn-action btn-excluir" onclick="excluirReserva(${idx})">🗑️ Excluir</button>
+                    </div>
                 `;
                 divSalvas.appendChild(box);
             });
@@ -609,6 +677,53 @@
         document.getElementById('reserva-cliente').value = '';
         renderizarFormReserva();
         alert('📌 Reserva salva na nuvem!');
+    }
+
+    function concluirReserva(idx) {
+        const res = window.dados.reservas[idx];
+        if (confirm(`Confirmar venda da encomenda de "${res.cliente}" no valor de R$ ${res.total.toFixed(2)}?`)) {
+            processarEntradaFinanceira(res.total);
+
+            const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            window.dados.historico.push({
+                data: dataAtual,
+                descricao: `Reserva: ${res.cliente} (${res.itens})`,
+                total: res.total
+            });
+
+            window.dados.reservas.splice(idx, 1);
+            window.salvarDados();
+            renderizarFormReserva();
+            alert('🎉 Venda da reserva concluída com sucesso!');
+        }
+    }
+
+    function editarReserva(idx) {
+        const res = window.dados.reservas[idx];
+        const novoCliente = prompt("Nome do Cliente:", res.cliente);
+        if (novoCliente === null) return;
+
+        const novosItens = prompt("Descrição dos itens:", res.itens);
+        if (novosItens === null) return;
+
+        const novoTotal = parseFloat(prompt("Valor Total (R$):", res.total));
+        if (isNaN(novoTotal)) return;
+
+        res.cliente = novoCliente.trim() || res.cliente;
+        res.itens = novosItens.trim() || res.itens;
+        res.total = novoTotal;
+
+        window.salvarDados();
+        renderizarFormReserva();
+        alert('✅ Reserva atualizada!');
+    }
+
+    function excluirReserva(idx) {
+        if (confirm("Deseja excluir esta reserva?")) {
+            window.dados.reservas.splice(idx, 1);
+            window.salvarDados();
+            renderizarFormReserva();
+        }
     }
 </script>
 
