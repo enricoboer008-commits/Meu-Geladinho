@@ -99,8 +99,8 @@
             text-align: center;
         }
 
-        .card-stat h4 { margin: 0; font-size: 12px; color: #006064; }
-        .card-stat p { margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: var(--primary); }
+        .card-stat h4 { margin: 0; font-size: 11px; color: #006064; }
+        .card-stat p { margin: 5px 0 0 0; font-size: 16px; font-weight: bold; color: var(--primary); }
 
         .form-group { margin-bottom: 12px; }
         label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; }
@@ -138,28 +138,30 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
+            font-size: 13px;
         }
 
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        th, td { padding: 8px 4px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: #e0f2f1; color: #004d40; }
 
         .btn-action {
-            padding: 5px 8px;
+            padding: 5px 6px;
             border-radius: 4px;
             border: none;
             color: white;
             cursor: pointer;
             font-size: 12px;
             width: auto;
+            margin-right: 2px;
         }
         .btn-repor { background: #ff9800; }
+        .btn-editar { background: #2196F3; }
         .btn-excluir { background: #f44336; }
     </style>
 </head>
 <body>
 
-<div class="header">🍦 Geladinhos do Condomínio (Sincronizado)</div>
+<div class="header">🍦 Geladinhos do Condomínio</div>
 
 <div class="container">
 
@@ -171,12 +173,16 @@
                 <p id="fat-total">R$ 0,00</p>
             </div>
             <div class="card-stat">
-                <h4>Lucro</h4>
-                <p id="lucro-total">R$ 0,00</p>
+                <h4>Caixa Receita</h4>
+                <p id="receita-total">R$ 0,00 / 50</p>
             </div>
             <div class="card-stat">
                 <h4>Reserva</h4>
-                <p id="reserva-total">R$ 0,00</p>
+                <p id="reserva-total">R$ 0,00 / 50</p>
+            </div>
+            <div class="card-stat">
+                <h4>Lucro Sócios</h4>
+                <p id="lucro-total">R$ 0,00</p>
             </div>
         </div>
 
@@ -202,11 +208,11 @@
                     <input type="number" step="0.01" id="cad-preco" placeholder="Ex: 4.00" required>
                 </div>
                 <div class="form-group">
-                    <label>Custo de Produção (R$) (Opcional)</label>
+                    <label>Custo Unitário (R$)</label>
                     <input type="number" step="0.01" id="cad-custo" placeholder="Ex: 1.50">
                 </div>
                 <div class="form-group">
-                    <label>Estoque Inicial (Opcional)</label>
+                    <label>Estoque Inicial</label>
                     <input type="number" id="cad-estoque" placeholder="Ex: 10">
                 </div>
                 <button type="submit" class="btn-primary">Salvar Sabor</button>
@@ -214,7 +220,7 @@
         </div>
     </div>
 
-    <!-- REGISTRAR VENDA MULTIPLA -->
+    <!-- REGISTRAR VENDA -->
     <div id="tab-venda" class="tab-content">
         <div class="card-box">
             <h3>💰 Registrar Venda</h3>
@@ -222,11 +228,7 @@
             <div style="margin-top:15px; font-weight:bold; font-size:16px;">
                 Total: R$ <span id="venda-total-calculado">0.00</span>
             </div>
-            <div class="form-group" style="margin-top: 10px;">
-                <label>% Lucro para Reserva</label>
-                <input type="number" id="venda-pct-reserva" value="20">
-            </div>
-            <button class="btn-primary" onclick="concluirVenda()">Finalizar Venda</button>
+            <button class="btn-primary" onclick="concluirVenda()" style="margin-top: 15px;">Finalizar Venda</button>
         </div>
     </div>
 
@@ -291,7 +293,7 @@
     </button>
 </div>
 
-<!-- INTEGRAÇÃO COM FIREBASE REALTIME DATABASE -->
+<!-- INTEGRAÇÃO FIREBASE -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -312,18 +314,17 @@
 
     window.dados = {
         produtos: [],
-        financeiro: { faturamento: 0, lucro: 0, reserva: 0 },
+        financeiro: { faturamento: 0, receitaCaixa: 0, reserva: 0, lucro: 0 },
         historico: [],
         reservas: []
     };
 
-    // ESCUTA ALTERAÇÕES NO BANCO EM TEMPO REAL
     onValue(dbRef, (snapshot) => {
         const val = snapshot.val();
         if (val) {
             window.dados = {
                 produtos: val.produtos || [],
-                financeiro: val.financeiro || { faturamento: 0, lucro: 0, reserva: 0 },
+                financeiro: val.financeiro || { faturamento: 0, receitaCaixa: 0, reserva: 0, lucro: 0 },
                 historico: val.historico || [],
                 reservas: val.reservas || []
             };
@@ -352,9 +353,11 @@
     function atualizarInterface() {
         if (!window.dados) return;
 
-        document.getElementById('fat-total').innerText = `R$ ${(window.dados.financeiro.faturamento || 0).toFixed(2)}`;
-        document.getElementById('lucro-total').innerText = `R$ ${(window.dados.financeiro.lucro || 0).toFixed(2)}`;
-        document.getElementById('reserva-total').innerText = `R$ ${(window.dados.financeiro.reserva || 0).toFixed(2)}`;
+        const fin = window.dados.financeiro;
+        document.getElementById('fat-total').innerText = `R$ ${(fin.faturamento || 0).toFixed(2)}`;
+        document.getElementById('receita-total').innerText = `R$ ${(fin.receitaCaixa || 0).toFixed(2)} / 50`;
+        document.getElementById('reserva-total').innerText = `R$ ${(fin.reserva || 0).toFixed(2)} / 50`;
+        document.getElementById('lucro-total').innerText = `R$ ${(fin.lucro || 0).toFixed(2)}`;
 
         const listaHist = document.getElementById('lista-historico');
         listaHist.innerHTML = '';
@@ -416,7 +419,6 @@
 
     function concluirVenda() {
         let faturamentoVenda = 0;
-        let lucroVenda = 0;
         let itensComprados = [];
 
         window.dados.produtos.forEach((p, idx) => {
@@ -431,7 +433,6 @@
                 p.estoque -= qtd;
                 p.vendas += qtd;
                 faturamentoVenda += qtd * p.preco;
-                lucroVenda += qtd * (p.preco - p.custo);
                 itensComprados.push(`${qtd}x ${p.nome}`);
             }
         });
@@ -441,12 +442,33 @@
             return;
         }
 
-        const pctReserva = parseFloat(document.getElementById('venda-pct-reserva').value) || 0;
-        const valorReserva = (lucroVenda * pctReserva) / 100;
-
         window.dados.financeiro.faturamento += faturamentoVenda;
-        window.dados.financeiro.lucro += (lucroVenda - valorReserva);
-        window.dados.financeiro.reserva += valorReserva;
+
+        // Distribuição automática inteligente do dinheiro
+        let valorRestante = faturamentoVenda;
+
+        // 1. Preencher Caixa da Receita Principal (Teto R$ 50)
+        let faltaReceita = 50 - (window.dados.financeiro.receitaCaixa || 0);
+        if (faltaReceita > 0) {
+            let alocarReceita = Math.min(valorRestante, faltaReceita);
+            window.dados.financeiro.receitaCaixa = (window.dados.financeiro.receitaCaixa || 0) + alocarReceita;
+            valorRestante -= alocarReceita;
+        }
+
+        // 2. Preencher Reserva de Emergência (Teto R$ 50)
+        if (valorRestante > 0) {
+            let faltaReserva = 50 - (window.dados.financeiro.reserva || 0);
+            if (faltaReserva > 0) {
+                let alocarReserva = Math.min(valorRestante, faltaReserva);
+                window.dados.financeiro.reserva = (window.dados.financeiro.reserva || 0) + alocarReserva;
+                valorRestante -= alocarReserva;
+            }
+        }
+
+        // 3. O restante vai integralmente para o Lucro dos Sócios
+        if (valorRestante > 0) {
+            window.dados.financeiro.lucro = (window.dados.financeiro.lucro || 0) + valorRestante;
+        }
 
         const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
         window.dados.historico.push({
@@ -457,7 +479,7 @@
 
         window.salvarDados();
         renderizarFormVenda();
-        alert('🎉 Venda concluída e salva na nuvem!');
+        alert('🎉 Venda registrada e valores distribuídos automaticamente!');
     }
 
     function renderizarEstoque() {
@@ -470,8 +492,9 @@
                 <td>R$ ${p.preco.toFixed(2)}</td>
                 <td>${p.estoque} un.</td>
                 <td>
-                    <button class="btn-action btn-repor" onclick="reporEstoque(${idx})">📦</button>
-                    <button class="btn-action btn-excluir" onclick="excluirSabor(${idx})">🗑️</button>
+                    <button class="btn-action btn-repor" onclick="reporEstoque(${idx})" title="Repor">📦</button>
+                    <button class="btn-action btn-editar" onclick="editarSabor(${idx})" title="Editar">✏️</button>
+                    <button class="btn-action btn-excluir" onclick="excluirSabor(${idx})" title="Excluir">🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -485,6 +508,27 @@
             window.salvarDados();
             renderizarEstoque();
         }
+    }
+
+    function editarSabor(idx) {
+        const p = window.dados.produtos[idx];
+        const novoNome = prompt("Nome do Sabor:", p.nome);
+        if (novoNome === null) return;
+
+        const novoPreco = parseFloat(prompt("Preço de Venda (R$):", p.preco));
+        if (isNaN(novoPreco)) return;
+
+        const novoCusto = parseFloat(prompt("Custo Unitário (R$):", p.custo || 0));
+        const novoEstoque = parseInt(prompt("Quantidade em Estoque:", p.estoque));
+
+        p.nome = novoNome.trim() || p.nome;
+        p.preco = novoPreco;
+        p.custo = isNaN(novoCusto) ? p.custo : novoCusto;
+        p.estoque = isNaN(novoEstoque) ? p.estoque : novoEstoque;
+
+        window.salvarDados();
+        renderizarEstoque();
+        alert('✅ Sabor atualizado!');
     }
 
     function excluirSabor(idx) {
