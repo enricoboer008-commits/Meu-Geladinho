@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Geladinhos 🍦</title>
+    <style>
+        :root {
+            --primary: #00838f;
+            --primary-light: #e0f7fa;
+            --secondary: #00acc1;
+            --bg: #f4f7f6;
+            --text: #333;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text);
+            padding-bottom: 70px;
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 15px auto;
+            padding: 0 15px;
+        }
+
+        .nav-menu {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 10px 5px;
+            border: none;
+            background: none;
+            font-size: 11px;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .nav-btn .icon { font-size: 18px; }
+
+        .nav-btn.active {
+            color: var(--primary);
+            font-weight: bold;
+            border-top: 3px solid var(--primary);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .card-stat {
+            background: var(--primary-light);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .card-stat h4 { margin: 0; font-size: 12px; color: #006064; }
+        .card-stat p { margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: var(--primary); }
+
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .btn-primary:hover { background-color: var(--primary); }
+
+        .item-carrinho {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-carrinho span { flex: 1; }
+        .item-carrinho input { width: 60px; text-align: center; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #e0f2f1; color: #004d40; }
+
+        .btn-action {
+            padding: 5px 8px;
+            border-radius: 4px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            width: auto;
+        }
+        .btn-repor { background: #ff9800; }
+        .btn-excluir { background: #f44336; }
+    </style>
+</head>
+<body>
+
+<div class="header">🍦 Geladinhos do Condomínio (Sincronizado)</div>
+
+<div class="container">
+
+    <!-- PAINEL PRINCIPAL -->
+    <div id="tab-inicio" class="tab-content active">
+        <div class="cards-grid">
+            <div class="card-stat">
+                <h4>Faturamento</h4>
+                <p id="fat-total">R$ 0,00</p>
+            </div>
+            <div class="card-stat">
+                <h4>Lucro</h4>
+                <p id="lucro-total">R$ 0,00</p>
+            </div>
+            <div class="card-stat">
+                <h4>Reserva</h4>
+                <p id="reserva-total">R$ 0,00</p>
+            </div>
+        </div>
+
+        <div class="card-box">
+            <h3>📜 Últimas Vendas</h3>
+            <ul id="lista-historico" style="padding-left:20px; font-size:13px; color:#555;">
+                <li>Nenhuma venda salva.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- CADASTRAR SABOR -->
+    <div id="tab-cadastrar" class="tab-content">
+        <div class="card-box">
+            <h3>➕ Cadastrar Sabor</h3>
+            <form id="form-cadastrar">
+                <div class="form-group">
+                    <label>Sabor *</label>
+                    <input type="text" id="cad-nome" placeholder="Ex: Morango Gourmet" required>
+                </div>
+                <div class="form-group">
+                    <label>Preço de Venda (R$) *</label>
+                    <input type="number" step="0.01" id="cad-preco" placeholder="Ex: 4.00" required>
+                </div>
+                <div class="form-group">
+                    <label>Custo de Produção (R$) (Opcional)</label>
+                    <input type="number" step="0.01" id="cad-custo" placeholder="Ex: 1.50">
+                </div>
+                <div class="form-group">
+                    <label>Estoque Inicial (Opcional)</label>
+                    <input type="number" id="cad-estoque" placeholder="Ex: 10">
+                </div>
+                <button type="submit" class="btn-primary">Salvar Sabor</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- REGISTRAR VENDA MULTIPLA -->
+    <div id="tab-venda" class="tab-content">
+        <div class="card-box">
+            <h3>💰 Registrar Venda</h3>
+            <div id="container-venda-itens"></div>
+            <div style="margin-top:15px; font-weight:bold; font-size:16px;">
+                Total: R$ <span id="venda-total-calculado">0.00</span>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>% Lucro para Reserva</label>
+                <input type="number" id="venda-pct-reserva" value="20">
+            </div>
+            <button class="btn-primary" onclick="concluirVenda()">Finalizar Venda</button>
+        </div>
+    </div>
+
+    <!-- ESTOQUE -->
+    <div id="tab-estoque" class="tab-content">
+        <div class="card-box">
+            <h3>📦 Geladinhos no Congelador</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sabor</th>
+                        <th>Preço</th>
+                        <th>Qtd</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-estoque"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RESERVAS -->
+    <div id="tab-reservas" class="tab-content">
+        <div class="card-box">
+            <h3>📝 Criar Nova Reserva</h3>
+            <div class="form-group">
+                <label>Nome do Cliente</label>
+                <input type="text" id="reserva-cliente" placeholder="Ex: João (Apto 102)">
+            </div>
+            <label>Escolha os Sabores:</label>
+            <div id="container-reserva-itens"></div>
+            <div style="margin-top:15px; font-weight:bold; font-size:16px;">
+                Total da Reserva: R$ <span id="reserva-total-calculado">0.00</span>
+            </div>
+            <button class="btn-primary" onclick="salvarReserva()" style="margin-top:10px;">Salvar Encomenda</button>
+        </div>
+
+        <div class="card-box">
+            <h3>📋 Encomendas Salvas</h3>
+            <div id="lista-reservas-salvas"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MENU NAVEGAÇÃO INFERIOR -->
+<div class="nav-menu">
+    <button class="nav-btn active" onclick="trocarAba('tab-inicio', this)">
+        <span class="icon">🏠</span>Início
+    </button>
+    <button class="nav-btn" onclick="trocarAba('tab-cadastrar', this)">
+        <span class="icon">➕</span>Sabor
+    </button>
+    <button class="nav-btn" onclick="trocarAba('tab-venda', this)">
+        <span class="icon">💰</span>Vender
+    </button>
+    <button class="nav-btn" onclick="trocarAba('tab-estoque', this)">
+        <span class="icon">📦</span>Estoque
+    </button>
+    <button class="nav-btn" onclick="trocarAba('tab-reservas', this)">
+        <span class="icon">📝</span>Reserva
+    </button>
+</div>
+
+<!-- INTEGRAÇÃO COM FIREBASE REALTIME DATABASE -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAkNiUJdKt_mAIMIJAGdauJfw_zYheFuio",
+        authDomain: "gerenciador-de-financas-juju.firebaseapp.com",
+        databaseURL: "https://gerenciador-de-financas-juju-default-rtdb.firebaseio.com",
+        projectId: "gerenciador-de-financas-juju",
+        storageBucket: "gerenciador-de-financas-juju.firebasestorage.app",
+        messagingSenderId: "592090852387",
+        appId: "1:592090852387:web:52b052f907d0354b9c9596"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dbRef = ref(db, 'dados_geladinhos');
+
+    window.dados = {
+        produtos: [],
+        financeiro: { faturamento: 0, lucro: 0, reserva: 0 },
+        historico: [],
+        reservas: []
+    };
+
+    // ESCUTA ALTERAÇÕES NO BANCO EM TEMPO REAL
+    onValue(dbRef, (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+            window.dados = {
+                produtos: val.produtos || [],
+                financeiro: val.financeiro || { faturamento: 0, lucro: 0, reserva: 0 },
+                historico: val.historico || [],
+                reservas: val.reservas || []
+            };
+        }
+        window.atualizarInterface();
+    });
+
+    window.salvarDados = function() {
+        set(dbRef, window.dados);
+    };
+</script>
+
+<script>
+    function trocarAba(abaId, btn) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+        document.getElementById(abaId).classList.add('active');
+        if (btn) btn.classList.add('active');
+
+        if (abaId === 'tab-venda') renderizarFormVenda();
+        if (abaId === 'tab-reservas') renderizarFormReserva();
+        if (abaId === 'tab-estoque') renderizarEstoque();
+    }
+
+    function atualizarInterface() {
+        if (!window.dados) return;
+
+        document.getElementById('fat-total').innerText = `R$ ${(window.dados.financeiro.faturamento || 0).toFixed(2)}`;
+        document.getElementById('lucro-total').innerText = `R$ ${(window.dados.financeiro.lucro || 0).toFixed(2)}`;
+        document.getElementById('reserva-total').innerText = `R$ ${(window.dados.financeiro.reserva || 0).toFixed(2)}`;
+
+        const listaHist = document.getElementById('lista-historico');
+        listaHist.innerHTML = '';
+        if (!window.dados.historico || window.dados.historico.length === 0) {
+            listaHist.innerHTML = '<li>Nenhuma venda registrada ainda.</li>';
+        } else {
+            window.dados.historico.slice(-5).reverse().forEach(h => {
+                const li = document.createElement('li');
+                li.innerText = `[${h.data}] ${h.descricao} = R$ ${h.total.toFixed(2)}`;
+                listaHist.appendChild(li);
+            });
+        }
+    }
+
+    document.getElementById('form-cadastrar').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nome = document.getElementById('cad-nome').value.trim();
+        const preco = parseFloat(document.getElementById('cad-preco').value);
+        const custo = parseFloat(document.getElementById('cad-custo').value) || 0;
+        const estoque = parseInt(document.getElementById('cad-estoque').value) || 0;
+
+        window.dados.produtos.push({ nome, preco, custo, estoque, vendas: 0 });
+        window.salvarDados();
+        e.target.reset();
+        alert('✅ Sabor cadastrado com sucesso!');
+    });
+
+    function renderizarFormVenda() {
+        const container = document.getElementById('container-venda-itens');
+        container.innerHTML = '';
+
+        if (!window.dados.produtos || window.dados.produtos.length === 0) {
+            container.innerHTML = '<p style="color:red;">⚠️ Nenhum sabor cadastrado!</p>';
+            return;
+        }
+
+        window.dados.produtos.forEach((p, idx) => {
+            const div = document.createElement('div');
+            div.className = 'item-carrinho';
+            div.innerHTML = `
+                <span><strong>${p.nome}</strong> (R$ ${p.preco.toFixed(2)}) - Estq: ${p.estoque}</span>
+                <input type="number" min="0" max="${p.estoque}" value="0" onchange="calcularTotalVenda()" id="venda-qtd-${idx}">
+            `;
+            container.appendChild(div);
+        });
+        calcularTotalVenda();
+    }
+
+    function calcularTotalVenda() {
+        let total = 0;
+        window.dados.produtos.forEach((p, idx) => {
+            const input = document.getElementById(`venda-qtd-${idx}`);
+            if (input) {
+                total += (parseInt(input.value) || 0) * p.preco;
+            }
+        });
+        document.getElementById('venda-total-calculado').innerText = total.toFixed(2);
+    }
+
+    function concluirVenda() {
+        let faturamentoVenda = 0;
+        let lucroVenda = 0;
+        let itensComprados = [];
+
+        window.dados.produtos.forEach((p, idx) => {
+            const input = document.getElementById(`venda-qtd-${idx}`);
+            const qtd = parseInt(input.value) || 0;
+
+            if (qtd > 0) {
+                if (qtd > p.estoque) {
+                    alert(`Estoque insuficiente de ${p.nome}!`);
+                    return;
+                }
+                p.estoque -= qtd;
+                p.vendas += qtd;
+                faturamentoVenda += qtd * p.preco;
+                lucroVenda += qtd * (p.preco - p.custo);
+                itensComprados.push(`${qtd}x ${p.nome}`);
+            }
+        });
+
+        if (faturamentoVenda === 0) {
+            alert('Selecione pelo menos um sabor para vender.');
+            return;
+        }
+
+        const pctReserva = parseFloat(document.getElementById('venda-pct-reserva').value) || 0;
+        const valorReserva = (lucroVenda * pctReserva) / 100;
+
+        window.dados.financeiro.faturamento += faturamentoVenda;
+        window.dados.financeiro.lucro += (lucroVenda - valorReserva);
+        window.dados.financeiro.reserva += valorReserva;
+
+        const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+        window.dados.historico.push({
+            data: dataAtual,
+            descricao: itensComprados.join(', '),
+            total: faturamentoVenda
+        });
+
+        window.salvarDados();
+        renderizarFormVenda();
+        alert('🎉 Venda concluída e salva na nuvem!');
+    }
+
+    function renderizarEstoque() {
+        const tbody = document.getElementById('tabela-estoque');
+        tbody.innerHTML = '';
+        window.dados.produtos.forEach((p, idx) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${p.nome}</strong></td>
+                <td>R$ ${p.preco.toFixed(2)}</td>
+                <td>${p.estoque} un.</td>
+                <td>
+                    <button class="btn-action btn-repor" onclick="reporEstoque(${idx})">📦</button>
+                    <button class="btn-action btn-excluir" onclick="excluirSabor(${idx})">🗑️</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function reporEstoque(idx) {
+        const qtd = parseInt(prompt(`Quantas unidades adicionar ao estoque de "${window.dados.produtos[idx].nome}"?`));
+        if (qtd > 0) {
+            window.dados.produtos[idx].estoque += qtd;
+            window.salvarDados();
+            renderizarEstoque();
+        }
+    }
+
+    function excluirSabor(idx) {
+        if (confirm(`Excluir o sabor "${window.dados.produtos[idx].nome}"?`)) {
+            window.dados.produtos.splice(idx, 1);
+            window.salvarDados();
+            renderizarEstoque();
+        }
+    }
+
+    function renderizarFormReserva() {
+        const container = document.getElementById('container-reserva-itens');
+        container.innerHTML = '';
+        
+        window.dados.produtos.forEach((p, idx) => {
+            const div = document.createElement('div');
+            div.className = 'item-carrinho';
+            div.innerHTML = `
+                <span>${p.nome} (R$ ${p.preco.toFixed(2)})</span>
+                <input type="number" min="0" value="0" onchange="calcularTotalReserva()" id="reserva-qtd-${idx}">
+            `;
+            container.appendChild(div);
+        });
+
+        const divSalvas = document.getElementById('lista-reservas-salvas');
+        divSalvas.innerHTML = '';
+        if (!window.dados.reservas || window.dados.reservas.length === 0) {
+            divSalvas.innerHTML = '<p style="font-size:13px; color:#666;">Nenhuma reserva ativa.</p>';
+        } else {
+            window.dados.reservas.forEach((res) => {
+                const box = document.createElement('div');
+                box.style.cssText = "background:#f9f9f9; padding:10px; border-radius:6px; margin-top:8px;";
+                box.innerHTML = `
+                    <strong>👤 ${res.cliente}</strong><br>
+                    <small>${res.itens} - <strong>Total: R$ ${res.total.toFixed(2)}</strong></small>
+                `;
+                divSalvas.appendChild(box);
+            });
+        }
+    }
+
+    function calcularTotalReserva() {
+        let total = 0;
+        window.dados.produtos.forEach((p, idx) => {
+            const input = document.getElementById(`reserva-qtd-${idx}`);
+            if (input) {
+                total += (parseInt(input.value) || 0) * p.preco;
+            }
+        });
+        document.getElementById('reserva-total-calculado').innerText = total.toFixed(2);
+    }
+
+    function salvarReserva() {
+        const cliente = document.getElementById('reserva-cliente').value.trim();
+        if (!cliente) {
+            alert('Digite o nome do cliente.');
+            return;
+        }
+
+        let total = 0;
+        let itens = [];
+        window.dados.produtos.forEach((p, idx) => {
+            const input = document.getElementById(`reserva-qtd-${idx}`);
+            const qtd = parseInt(input.value) || 0;
+            if (qtd > 0) {
+                total += qtd * p.preco;
+                itens.push(`${qtd}x ${p.nome}`);
+            }
+        });
+
+        if (total === 0) {
+            alert('Selecione pelo menos um item.');
+            return;
+        }
+
+        window.dados.reservas.push({ cliente, itens: itens.join(', '), total });
+        window.salvarDados();
+        document.getElementById('reserva-cliente').value = '';
+        renderizarFormReserva();
+        alert('📌 Reserva salva na nuvem!');
+    }
+</script>
+
+</body>
+</html>
