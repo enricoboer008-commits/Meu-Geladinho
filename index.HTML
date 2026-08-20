@@ -85,7 +85,6 @@
             margin-bottom: 20px;
         }
 
-        /* PAINEL CENTRALIZADO DO FATURAMENTO */
         .cards-grid-centralizado {
             display: flex;
             flex-direction: column;
@@ -181,7 +180,6 @@
             font-size: 13px;
         }
 
-        /* ESTILOS DA CALCULADORA */
         .calc-display {
             width: 100%;
             height: 50px;
@@ -211,6 +209,20 @@
         .calc-btn.op { background: var(--secondary); color: white; }
         .calc-btn.eq { background: #4CAF50; color: white; }
         .calc-btn.clear { background: #f44336; color: white; }
+
+        .resumo-custo-box {
+            background: #e8f5e9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #c8e6c9;
+        }
+        .resumo-custo-box div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -219,7 +231,7 @@
 
 <div class="container">
 
-    <!-- PAINEL PRINCIPAL CENTRALIZADO -->
+    <!-- PAINEL PRINCIPAL -->
     <div id="tab-inicio" class="tab-content active">
         <div class="cards-grid-centralizado">
             <div class="card-stat-central">
@@ -238,7 +250,6 @@
                 <h4>Lucro Total</h4>
                 <p id="lucro-total">R$ 0,00</p>
             </div>
-            <!-- NOVO CARD: VALOR A RECEBER DAS RESERVAS -->
             <div class="card-stat-central areceber">
                 <h4>A Receber (Reservas)</h4>
                 <p id="a-receber-total">R$ 0,00</p>
@@ -253,7 +264,6 @@
             </div>
         </div>
 
-        <!-- OPÇÕES AVANÇADAS ESCONDIDAS -->
         <div style="text-align: center; margin-bottom: 15px;">
             <button onclick="toggleOpcoesAvancadas()" style="background: none; border: none; color: #888; font-size: 12px; cursor: pointer; text-decoration: underline;">
                 ⚙️ Opções Avançadas de Ajuste Manual
@@ -262,7 +272,7 @@
 
         <div id="painel-avancado" class="card-box" style="display: none; border: 1px dashed #ccc;">
             <h3>💵 Lançamento Manual de Saldo</h3>
-            <p style="font-size: 12px; color: #666;">Ajuste o faturamento acumulado sem afetar o estoque.</p>
+            <p style="font-size: 12px; color: #666;">Ajuste o faturamento acumulado aceitando vírgula e centavos.</p>
             <div style="display: flex; gap: 10px;">
                 <button class="btn-primary" onclick="adicionarFaturamentoManual()">+ Adicionar</button>
                 <button class="btn-primary" style="background-color: #f44336;" onclick="retirarFaturamentoManual()">- Retirar</button>
@@ -339,7 +349,7 @@
         </div>
     </div>
 
-    <!-- RESERVAS COM OPÇÃO DE DESCONTO -->
+    <!-- RESERVAS -->
     <div id="tab-reservas" class="tab-content">
         <div class="card-box">
             <h3>📝 Criar Nova Reserva</h3>
@@ -367,10 +377,71 @@
         </div>
     </div>
 
-    <!-- CALCULADORA -->
+    <!-- CALCULADORA DE CUSTOS (G/ML) E PADRÃO -->
     <div id="tab-calc" class="tab-content">
+        
+        <!-- CUSTO POR PESO / ML -->
         <div class="card-box">
-            <h3>🧮 Calculadora Rápida</h3>
+            <h3>⚖️ Calculadora de Custo por Grama/ML</h3>
+            <p style="font-size: 12px; color: #666; margin-top: -8px;">Descubra o custo do saquinho medindo tamanho variável.</p>
+
+            <div style="text-align: right; margin-bottom: 10px;">
+                <button onclick="toggleCustosFixos()" style="background: none; border: none; color: #00838f; font-size: 12px; cursor: pointer; text-decoration: underline;">
+                    ⚙️ Configurações (Custos Fixos)
+                </button>
+            </div>
+
+            <div id="painel-custos-fixos" style="display: none; background: #fafafa; padding: 12px; border-radius: 8px; border: 1px dashed #ccc; margin-bottom: 15px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #333;">Preços Fixos (Adicionais):</h4>
+                <div class="form-group">
+                    <label>Custo do Saquinho + Laço (R$)</label>
+                    <input type="number" step="0.01" id="custo-saquinho" value="0.05" oninput="calcularCustoJuju()">
+                </div>
+                <div class="form-group">
+                    <label>Margem de Perda no Liquidificador (%)</label>
+                    <input type="number" id="custo-perda" value="5" placeholder="Ex: 5" oninput="calcularCustoJuju()">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Unidade de Medida</label>
+                <select id="calc-unidade" onchange="calcularCustoJuju()">
+                    <option value="g">Gramas (g)</option>
+                    <option value="ml">Mililitros (ml)</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Custo Total da Receita (R$)</label>
+                    <input type="number" step="0.01" id="receita-custo" placeholder="Ex: 20.00" oninput="calcularCustoJuju()">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Rendimento (g ou ml)</label>
+                    <input type="number" id="receita-rendimento" placeholder="Ex: 1000" oninput="calcularCustoJuju()">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Tamanho deste Juju Específico (g ou ml)</label>
+                <input type="number" id="juju-tamanho" placeholder="Ex: 80" oninput="calcularCustoJuju()">
+            </div>
+
+            <div class="resumo-custo-box">
+                <div>Custo por unidade base: <strong id="res-custo-grama">R$ 0,000</strong></div>
+                <div>Custo do Conteúdo: <strong id="res-custo-recheio">R$ 0,00</strong></div>
+                <div>Extras (Saquinho + Perda): <strong id="res-custo-extras">R$ 0,00</strong></div>
+                <hr style="border: 0; border-top: 1px solid #a5d6a7; margin: 8px 0;">
+                <div style="font-size: 16px; color: #2e7d32;">
+                    <strong>Custo Final deste Juju:</strong> 
+                    <strong id="res-custo-final">R$ 0,00</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- CALCULADORA PADRÃO -->
+        <div class="card-box">
+            <h3>🧮 Calculadora Simples</h3>
             <input type="text" id="calc-display" class="calc-display" readonly value="0">
             <div class="calc-grid">
                 <button class="calc-btn clear" onclick="calcClear()">C</button>
@@ -396,11 +467,12 @@
                 <button class="calc-btn" onclick="calcInput('.')">.</button>
             </div>
         </div>
+
     </div>
 
 </div>
 
-<!-- MENU NAVEGAÇÃO INFERIOR -->
+<!-- MENU INFERIOR -->
 <div class="nav-menu">
     <button class="nav-btn active" onclick="trocarAba('tab-inicio', this)">
         <span class="icon">🏠</span>Início
@@ -422,7 +494,7 @@
     </button>
 </div>
 
-<!-- INTEGRAÇÃO FIREBASE -->
+<!-- FIREBASE BASE -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -467,6 +539,13 @@
 </script>
 
 <script>
+    // Converte entrada de texto (aceitando vírgula ou ponto) para float de forma segura
+    function parseEntradaFloat(txt) {
+        if (!txt) return 0;
+        let limpo = txt.toString().replace(',', '.');
+        return parseFloat(limpo) || 0;
+    }
+
     function trocarAba(abaId, btn) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -484,52 +563,87 @@
         p.style.display = p.style.display === 'none' ? 'block' : 'none';
     }
 
+    function toggleCustosFixos() {
+        const p = document.getElementById('painel-custos-fixos');
+        p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function calcularCustoJuju() {
+        const custoReceita = parseEntradaFloat(document.getElementById('receita-custo').value);
+        const rendimento = parseEntradaFloat(document.getElementById('receita-rendimento').value);
+        const tamanhoJuju = parseEntradaFloat(document.getElementById('juju-tamanho').value);
+        const saquinho = parseEntradaFloat(document.getElementById('custo-saquinho').value);
+        const pctPerda = parseEntradaFloat(document.getElementById('custo-perda').value);
+        const unidade = document.getElementById('calc-unidade').value;
+
+        if (custoReceita <= 0 || rendimento <= 0) {
+            document.getElementById('res-custo-grama').innerText = `R$ 0,000 / ${unidade}`;
+            document.getElementById('res-custo-recheio').innerText = "R$ 0,00";
+            document.getElementById('res-custo-extras').innerText = "R$ 0,00";
+            document.getElementById('res-custo-final').innerText = "R$ 0,00";
+            return;
+        }
+
+        const custoPorGrama = custoReceita / rendimento;
+        const custoRecheioUnitario = custoPorGrama * tamanhoJuju;
+        const valorPerda = custoRecheioUnitario * (pctPerda / 100);
+        const extras = saquinho + valorPerda;
+        const custoFinal = custoRecheioUnitario + extras;
+
+        document.getElementById('res-custo-grama').innerText = `R$ ${custoPorGrama.toFixed(3)} / ${unidade}`;
+        document.getElementById('res-custo-recheio').innerText = `R$ ${custoRecheioUnitario.toFixed(2)}`;
+        document.getElementById('res-custo-extras').innerText = `R$ ${extras.toFixed(2)}`;
+        document.getElementById('res-custo-final').innerText = `R$ ${custoFinal.toFixed(2)}`;
+    }
+
     function processarEntradaFinanceira(valor) {
-        window.dados.financeiro.faturamento += valor;
+        valor = Math.round(valor * 100) / 100;
+        window.dados.financeiro.faturamento = Math.round((window.dados.financeiro.faturamento + valor) * 100) / 100;
         let valorRestante = valor;
 
         let faltaReceita = 50 - (window.dados.financeiro.receitaCaixa || 0);
         if (faltaReceita > 0) {
             let alocarReceita = Math.min(valorRestante, faltaReceita);
-            window.dados.financeiro.receitaCaixa = (window.dados.financeiro.receitaCaixa || 0) + alocarReceita;
-            valorRestante -= alocarReceita;
+            window.dados.financeiro.receitaCaixa = Math.round(((window.dados.financeiro.receitaCaixa || 0) + alocarReceita) * 100) / 100;
+            valorRestante = Math.round((valorRestante - alocarReceita) * 100) / 100;
         }
 
         if (valorRestante > 0) {
             let faltaReserva = 50 - (window.dados.financeiro.reserva || 0);
             if (faltaReserva > 0) {
                 let alocarReserva = Math.min(valorRestante, faltaReserva);
-                window.dados.financeiro.reserva = (window.dados.financeiro.reserva || 0) + alocarReserva;
-                valorRestante -= alocarReserva;
+                window.dados.financeiro.reserva = Math.round(((window.dados.financeiro.reserva || 0) + alocarReserva) * 100) / 100;
+                valorRestante = Math.round((valorRestante - alocarReserva) * 100) / 100;
             }
         }
 
         if (valorRestante > 0) {
-            window.dados.financeiro.lucro = (window.dados.financeiro.lucro || 0) + valorRestante;
+            window.dados.financeiro.lucro = Math.round(((window.dados.financeiro.lucro || 0) + valorRestante) * 100) / 100;
         }
     }
 
     function processarRetiradaFinanceira(valor) {
-        window.dados.financeiro.faturamento = Math.max(0, window.dados.financeiro.faturamento - valor);
+        valor = Math.round(valor * 100) / 100;
+        window.dados.financeiro.faturamento = Math.max(0, Math.round((window.dados.financeiro.faturamento - valor) * 100) / 100);
 
         let valorRetirar = valor;
 
         if (window.dados.financeiro.lucro > 0) {
             let abater = Math.min(window.dados.financeiro.lucro, valorRetirar);
-            window.dados.financeiro.lucro -= abater;
-            valorRetirar -= abater;
+            window.dados.financeiro.lucro = Math.round((window.dados.financeiro.lucro - abater) * 100) / 100;
+            valorRetirar = Math.round((valorRetirar - abater) * 100) / 100;
         }
 
         if (valorRetirar > 0 && window.dados.financeiro.reserva > 0) {
             let abater = Math.min(window.dados.financeiro.reserva, valorRetirar);
-            window.dados.financeiro.reserva -= abater;
-            valorRetirar -= abater;
+            window.dados.financeiro.reserva = Math.round((window.dados.financeiro.reserva - abater) * 100) / 100;
+            valorRetirar = Math.round((valorRetirar - abater) * 100) / 100;
         }
 
         if (valorRetirar > 0 && window.dados.financeiro.receitaCaixa > 0) {
             let abater = Math.min(window.dados.financeiro.receitaCaixa, valorRetirar);
-            window.dados.financeiro.receitaCaixa -= abater;
-            valorRetirar -= abater;
+            window.dados.financeiro.receitaCaixa = Math.round((window.dados.financeiro.receitaCaixa - abater) * 100) / 100;
+            valorRetirar = Math.round((valorRetirar - abater) * 100) / 100;
         }
     }
 
@@ -548,7 +662,6 @@
         document.getElementById('lucro-gabriel').innerText = `R$ ${metadeLucro.toFixed(2)}`;
         document.getElementById('lucro-enrico').innerText = `R$ ${metadeLucro.toFixed(2)}`;
 
-        // CÁLCULO DO VALOR TOTAL A RECEBER DAS RESERVAS
         let totalAReceber = 0;
         if (window.dados.reservas && window.dados.reservas.length > 0) {
             totalAReceber = window.dados.reservas.reduce((acc, r) => acc + (r.total || 0), 0);
@@ -574,8 +687,9 @@
     }
 
     function adicionarFaturamentoManual() {
-        const valor = parseFloat(prompt("Digite o valor a adicionar (R$):"));
-        if (isNaN(valor) || valor <= 0) return;
+        const entrada = prompt("Digite o valor a adicionar (ex: 15,50 ou 15.50):");
+        const valor = parseEntradaFloat(entrada);
+        if (valor <= 0) return;
 
         processarEntradaFinanceira(valor);
 
@@ -591,8 +705,9 @@
     }
 
     function retirarFaturamentoManual() {
-        const valor = parseFloat(prompt("Digite o valor a retirar (R$):"));
-        if (isNaN(valor) || valor <= 0) return;
+        const entrada = prompt("Digite o valor a retirar (ex: 77,54 ou 77.54):");
+        const valor = parseEntradaFloat(entrada);
+        if (valor <= 0) return;
 
         processarRetiradaFinanceira(valor);
 
@@ -604,7 +719,7 @@
         });
 
         window.salvarDados();
-        alert('✅ Valor retirado!');
+        alert('✅ Valor retirado com centavos atualizados!');
     }
 
     function excluirHistorico(idx) {
@@ -617,8 +732,8 @@
     document.getElementById('form-cadastrar').addEventListener('submit', (e) => {
         e.preventDefault();
         const nome = document.getElementById('cad-nome').value.trim();
-        const preco = parseFloat(document.getElementById('cad-preco').value);
-        const custo = parseFloat(document.getElementById('cad-custo').value) || 0;
+        const preco = parseEntradaFloat(document.getElementById('cad-preco').value);
+        const custo = parseEntradaFloat(document.getElementById('cad-custo').value);
         const estoque = parseInt(document.getElementById('cad-estoque').value) || 0;
 
         window.dados.produtos.push({ nome, preco, custo, estoque, vendas: 0 });
@@ -740,15 +855,13 @@
         const novoNome = prompt("Nome do Sabor:", p.nome);
         if (novoNome === null) return;
 
-        const novoPreco = parseFloat(prompt("Preço de Venda (R$):", p.preco));
-        if (isNaN(novoPreco)) return;
-
-        const novoCusto = parseFloat(prompt("Custo Unitário (R$):", p.custo || 0));
+        const novoPreco = parseEntradaFloat(prompt("Preço de Venda (R$):", p.preco));
+        const novoCusto = parseEntradaFloat(prompt("Custo Unitário (R$):", p.custo || 0));
         const novoEstoque = parseInt(prompt("Quantidade em Estoque:", p.estoque));
 
         p.nome = novoNome.trim() || p.nome;
         p.preco = novoPreco;
-        p.custo = isNaN(novoCusto) ? p.custo : novoCusto;
+        p.custo = novoCusto;
         p.estoque = isNaN(novoEstoque) ? p.estoque : novoEstoque;
 
         window.salvarDados();
@@ -812,7 +925,7 @@
             }
         });
 
-        const desconto = parseFloat(document.getElementById('reserva-desconto').value) || 0;
+        const desconto = parseEntradaFloat(document.getElementById('reserva-desconto').value);
         total = Math.max(0, total - desconto);
 
         document.getElementById('reserva-total-calculado').innerText = total.toFixed(2);
@@ -841,7 +954,7 @@
             return;
         }
 
-        const desconto = parseFloat(document.getElementById('reserva-desconto').value) || 0;
+        const desconto = parseEntradaFloat(document.getElementById('reserva-desconto').value);
         const totalFinal = Math.max(0, totalSoma - desconto);
 
         let descTexto = desconto > 0 ? ` (Desc: R$ ${desconto.toFixed(2)})` : '';
@@ -880,8 +993,7 @@
         const novosItens = prompt("Descrição dos itens:", res.itens);
         if (novosItens === null) return;
 
-        const novoTotal = parseFloat(prompt("Valor Total (R$):", res.total));
-        if (isNaN(novoTotal)) return;
+        const novoTotal = parseEntradaFloat(prompt("Valor Total (R$):", res.total));
 
         res.cliente = novoCliente.trim() || res.cliente;
         res.itens = novosItens.trim() || res.itens;
@@ -900,7 +1012,7 @@
         }
     }
 
-    /* FUNÇÕES DA CALCULADORA */
+    /* CALCULADORA SIMPLE */
     let calcVal = "0";
 
     function calcInput(char) {
