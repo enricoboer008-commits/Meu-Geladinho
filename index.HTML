@@ -1,1263 +1,421 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador de Geladinhos 🍦</title>
-    <style>
-        :root {
-            --primary: #00838f;
-            --primary-light: #e0f7fa;
-            --secondary: #00acc1;
-            --bg: #f4f7f6;
-            --text: #333;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Financeiro</title>
+  <style>
+    :root {
+      --bg-color: #f4f6f8;
+      --card-bg: #ffffff;
+      --primary: #2563eb;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --text: #1f2937;
+      --text-light: #6b7280;
+    }
 
-        * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+    }
 
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            margin: 0;
-            padding: 0;
-            color: var(--text);
-            padding-bottom: 70px;
-        }
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background-color: var(--card-bg);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
 
-        .header {
-            background: var(--primary);
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+    /* Navegação por Abas */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e5e7eb;
+      background: #f8fafc;
+    }
 
-        .container {
-            max-width: 800px;
-            margin: 15px auto;
-            padding: 0 15px;
-        }
+    .tab-btn {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      background: none;
+      font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: 0.2s;
+    }
 
-        .nav-menu {
-            display: flex;
-            justify-content: space-around;
-            background: white;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom: 3px solid var(--primary);
+      background: var(--card-bg);
+    }
 
-        .nav-btn {
-            flex: 1;
-            padding: 10px 2px;
-            border: none;
-            background: none;
-            font-size: 10px;
-            color: #666;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-        }
+    .tab-content {
+      display: none;
+      padding: 20px;
+      flex: 1;
+    }
 
-        .nav-btn .icon { font-size: 16px; }
+    .tab-content.active {
+      display: block;
+    }
 
-        .nav-btn.active {
-            color: var(--primary);
-            font-weight: bold;
-            border-top: 3px solid var(--primary);
-        }
+    /* Cards e Saldos */
+    .balance-card {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+    }
 
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+    .balance-card span {
+      font-size: 0.9em;
+      opacity: 0.9;
+    }
 
-        .card-box {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
+    .balance-card h1 {
+      margin: 5px 0 0 0;
+      font-size: 2.2em;
+    }
 
-        .cards-grid-centralizado {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            max-width: 400px;
-            margin: 0 auto 20px auto;
-        }
+    .stat-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+    }
 
-        .card-stat-central {
-            background: var(--primary-light);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            width: 100%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+    .stat-card span {
+      font-size: 0.85em;
+      color: var(--text-light);
+    }
 
-        .card-stat-central.areceber {
-            background: #fff3e0;
-            border: 1px solid #ffe0b2;
-        }
+    .stat-card h2 {
+      margin: 5px 0 0 0;
+      font-size: 1.5em;
+      color: var(--text);
+    }
 
-        .card-stat-central h4 { margin: 0; font-size: 13px; color: #006064; text-transform: uppercase; letter-spacing: 0.5px; }
-        .card-stat-central.areceber h4 { color: #e65100; }
-        .card-stat-central p { margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: var(--primary); }
-        .card-stat-central.areceber p { color: #f57c00; }
+    /* Formulários e Botões */
+    .form-group {
+      margin-bottom: 15px;
+    }
 
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.9em;
+      color: var(--text-light);
+    }
 
-        input, select, button {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 14px;
-        }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 1em;
+    }
 
-        .btn-primary {
-            background-color: var(--secondary);
-            color: white;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            margin-top: 5px;
-        }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1em;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
 
-        .btn-primary:hover { background-color: var(--primary); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-secondary { background: #e2e8f0; color: var(--text); }
 
-        .item-carrinho {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
+    /* Listas */
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
 
-        .item-carrinho span { flex: 1; }
-        .item-carrinho input { width: 60px; text-align: center; }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
+    .history-item:last-child { border-bottom: none; }
 
-        th, td { padding: 8px 4px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #e0f2f1; color: #004d40; }
+    .val-positive { color: var(--success); font-weight: bold; }
+    .val-negative { color: var(--danger); font-weight: bold; }
 
-        .btn-action {
-            padding: 5px 6px;
-            border-radius: 4px;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 12px;
-            width: auto;
-            margin-right: 2px;
-        }
-        .btn-repor { background: #ff9800; }
-        .btn-editar { background: #2196F3; }
-        .btn-excluir { background: #f44336; }
-        .btn-concluir { background: #4CAF50; }
+    /* Modal Oculto */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
 
-        .historico-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 13px;
-        }
-
-        /* NAVEGAÇÃO SUB-ABAS (INTERNA) */
-        .sub-nav {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .sub-btn {
-            flex: 1;
-            padding: 8px;
-            background: #e0e0e0;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #555;
-        }
-        .sub-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .calc-display {
-            width: 100%;
-            height: 50px;
-            font-size: 22px;
-            text-align: right;
-            padding: 10px;
-            margin-bottom: 15px;
-            background: #f0f0f0;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-weight: bold;
-        }
-        .calc-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-        }
-        .calc-btn {
-            padding: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            border: none;
-            background: #e0e0e0;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .calc-btn.op { background: var(--secondary); color: white; }
-        .calc-btn.eq { background: #4CAF50; color: white; }
-        .calc-btn.clear { background: #f44336; color: white; }
-
-        .resumo-custo-box {
-            background: #e8f5e9;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border: 1px solid #c8e6c9;
-        }
-        .resumo-custo-box div {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-    </style>
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+  </style>
 </head>
 <body>
 
-<div class="header">🍦 Geladinhos do Condomínio</div>
+<div class="app-container">
+  <!-- Navegação das Abas -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('principal')">Principal</button>
+    <button class="tab-btn" onclick="switchTab('estatisticas')">Estatísticas</button>
+  </div>
 
-<div class="container">
-
-    <!-- PAINEL PRINCIPAL -->
-    <div id="tab-inicio" class="tab-content active">
-        <div class="cards-grid-centralizado">
-            <div class="card-stat-central">
-                <h4>Faturamento</h4>
-                <p id="fat-total">R$ 0,00</p>
-            </div>
-            <div class="card-stat-central">
-                <h4>Caixa Receita</h4>
-                <p id="receita-total">R$ 0,00 / 50</p>
-            </div>
-            <div class="card-stat-central">
-                <h4>Reserva</h4>
-                <p id="reserva-total">R$ 0,00 / 50</p>
-            </div>
-            <div class="card-stat-central">
-                <h4>Lucro Total</h4>
-                <p id="lucro-total">R$ 0,00</p>
-            </div>
-            <div class="card-stat-central areceber">
-                <h4>A Receber (Reservas + Fiados)</h4>
-                <p id="a-receber-total">R$ 0,00</p>
-            </div>
-        </div>
-
-        <div class="card-box" style="background: #e8f5e9; text-align: center;">
-            <h3>🤝 Divisão de Lucro dos Sócios</h3>
-            <div style="display: flex; justify-content: space-around; margin-top: 10px; font-weight: bold;">
-                <div>👦 Gabriel: <span id="lucro-gabriel" style="color: #2e7d32;">R$ 0,00</span></div>
-                <div>👦 Enrico: <span id="lucro-enrico" style="color: #2e7d32;">R$ 0,00</span></div>
-            </div>
-        </div>
-
-        <div style="text-align: center; margin-bottom: 15px;">
-            <button onclick="toggleOpcoesAvancadas()" style="background: none; border: none; color: #888; font-size: 12px; cursor: pointer; text-decoration: underline;">
-                ⚙️ Opções Avançadas de Ajuste Manual
-            </button>
-        </div>
-
-        <div id="painel-avancado" class="card-box" style="display: none; border: 1px dashed #ccc;">
-            <h3>💵 Lançamento Manual de Saldo</h3>
-            <p style="font-size: 12px; color: #666;">Ajuste o faturamento acumulado aceitando vírgula e centavos.</p>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-primary" onclick="adicionarFaturamentoManual()">+ Adicionar</button>
-                <button class="btn-primary" style="background-color: #f44336;" onclick="retirarFaturamentoManual()">- Retirar</button>
-            </div>
-        </div>
-
-        <div class="card-box">
-            <h3>📜 Últimas Vendas</h3>
-            <div id="lista-historico">
-                <p style="font-size:13px; color:#555;">Nenhuma venda salva.</p>
-            </div>
-        </div>
+  <!-- ABA PRINCIPAL (Caixa/Banco) -->
+  <div id="principal" class="tab-content active">
+    <div class="balance-card">
+      <span>Saldo em Caixa (Disponível)</span>
+      <h1 id="saldo-caixa">R$ 0,00</h1>
     </div>
 
-    <!-- CADASTRAR SABOR -->
-    <div id="tab-cadastrar" class="tab-content">
-        <div class="card-box">
-            <h3>➕ Cadastrar Sabor</h3>
-            <form id="form-cadastrar">
-                <div class="form-group">
-                    <label>Sabor *</label>
-                    <input type="text" id="cad-nome" placeholder="Ex: Morango Gourmet" required>
-                </div>
-                <div class="form-group">
-                    <label>Preço de Venda (R$) *</label>
-                    <input type="number" step="0.01" id="cad-preco" placeholder="Ex: 4.00" required>
-                </div>
-                <div class="form-group">
-                    <label>Custo Unitário (R$)</label>
-                    <input type="number" step="0.01" id="cad-custo" placeholder="Ex: 1.50">
-                </div>
-                <div class="form-group">
-                    <label>Estoque Inicial</label>
-                    <input type="number" id="cad-estoque" placeholder="Ex: 10">
-                </div>
-                <button type="submit" class="btn-primary">Salvar Sabor</button>
-            </form>
-        </div>
+    <!-- Ações Rápidas -->
+    <div class="form-group">
+      <h3>Registrar Movimentação</h3>
+      
+      <!-- Entrada / Venda -->
+      <div style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+        <label>Entrada (Venda Realizada)</label>
+        <input type="number" id="qtd-jujubas" placeholder="Qtd. de jujubas" min="1" style="margin-bottom: 8px;">
+        <input type="number" id="valor-entrada" placeholder="Valor recebido (R$)" step="0.01" style="margin-bottom: 8px;">
+        <button class="btn btn-success" onclick="registrarEntrada()">+ Adicionar Entrada</button>
+      </div>
+
+      <!-- Saída / Gasto -->
+      <div>
+        <label>Saída (Gasto/Mercado)</label>
+        <input type="text" id="desc-saida" placeholder="Descrição (ex: Mercado)" style="margin-bottom: 8px;">
+        <input type="number" id="valor-saida" placeholder="Valor gasto (R$)" step="0.01" style="margin-bottom: 8px;">
+        <button class="btn btn-danger" onclick="registrarSaida()">- Registrar Gasto</button>
+      </div>
     </div>
 
-    <!-- REGISTRAR VENDA -->
-    <div id="tab-venda" class="tab-content">
-        <div class="card-box">
-            <h3>💰 Registrar Venda</h3>
-            <div id="container-venda-itens"></div>
-            <div style="margin-top:15px; font-weight:bold; font-size:16px;">
-                Total: R$ <span id="venda-total-calculado">0.00</span>
-            </div>
-            <button class="btn-primary" onclick="concluirVenda()" style="margin-top: 15px;">Finalizar Venda</button>
-        </div>
+    <button class="btn btn-secondary" onclick="toggleModal(true)" style="margin-top: 20px;">
+      🔍 Ver Histórico Detalhado de Vendas
+    </button>
+  </div>
+
+  <!-- ABA ESTATÍSTICAS -->
+  <div id="estatisticas" class="tab-content">
+    <div class="stat-card">
+      <span>Total em Dinheiro Ganho (Acumulado)</span>
+      <h2 id="total-ganho">R$ 0,00</h2>
     </div>
 
-    <!-- ESTOQUE -->
-    <div id="tab-estoque" class="tab-content">
-        <div class="card-box">
-            <h3>📦 Geladinhos no Congelador</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Sabor</th>
-                        <th>Preço</th>
-                        <th>Qtd</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-estoque"></tbody>
-            </table>
-            
-            <div style="margin-top: 20px; padding: 12px; background: #e0f7fa; border-radius: 8px;">
-                <h4 style="margin: 0 0 5px 0; color: #006064;">📊 Resumo Total do Congelador:</h4>
-                <div style="font-size: 14px;">Total de Geladinhos: <strong id="total-qtd-estoque">0</strong> jujus</div>
-                <div style="font-size: 14px;">Valor em Dinheiro: <strong id="total-valor-estoque">R$ 0,00</strong></div>
-            </div>
-        </div>
+    <div class="stat-card">
+      <span>Total de Jujubas Vendidas</span>
+      <h2 id="total-jujubas">0 un.</h2>
     </div>
 
-    <!-- ABA COMPARTILHADA: RESERVAS E FIADOS -->
-    <div id="tab-reservas" class="tab-content">
-        
-        <!-- BOTOES DE SUB-ABAS -->
-        <div class="sub-nav">
-            <button id="btn-sub-reserva" class="sub-btn active" onclick="trocarSubAba('reserva')">📅 Encomendas Programadas</button>
-            <button id="btn-sub-fiado" class="sub-btn" onclick="trocarSubAba('fiado')">📌 Fiados (Pagar Depois)</button>
-        </div>
-
-        <!-- CONTEÚDO DA SUB-ABA ENCOMENDAS / RESERVAS -->
-        <div id="sub-conteudo-reserva">
-            <div class="card-box">
-                <h3>📝 Nova Encomenda Programada</h3>
-                <p style="font-size: 12px; color: #666; margin-top: -8px;">O estoque só será baixado no momento da entrega do produto.</p>
-                <div class="form-group">
-                    <label>Nome do Cliente</label>
-                    <input type="text" id="reserva-cliente" placeholder="Ex: João (Apto 102)">
-                </div>
-                <label>Escolha os Sabores:</label>
-                <div id="container-reserva-itens"></div>
-
-                <div class="form-group" style="margin-top: 15px;">
-                    <label>Desconto Especial (R$):</label>
-                    <input type="number" step="0.01" id="reserva-desconto" placeholder="0.00" oninput="calcularTotalReserva()">
-                </div>
-
-                <div style="margin-top:15px; font-weight:bold; font-size:16px;">
-                    Total da Reserva: R$ <span id="reserva-total-calculado">0.00</span>
-                </div>
-                <button class="btn-primary" onclick="salvarReserva()" style="margin-top:10px;">Salvar Encomenda</button>
-            </div>
-
-            <div class="card-box">
-                <h3>📋 Lista de Encomendas Programadas</h3>
-                <div id="lista-reservas-salvas"></div>
-            </div>
-        </div>
-
-        <!-- CONTEÚDO DA SUB-ABA FIADOS -->
-        <div id="sub-conteudo-fiado" style="display: none;">
-            <div class="card-box">
-                <h3>📌 Novo Fiado</h3>
-                <p style="font-size: 12px; color: #d32f2f; margin-top: -8px;">⚠️ O juju já é entregue agora, portanto o estoque É BAIXADO IMEDIATAMENTE.</p>
-                <div class="form-group">
-                    <label>Nome do Devedor / Vizinho</label>
-                    <input type="text" id="fiado-cliente" placeholder="Ex: Pedro (Apto 304)">
-                </div>
-                <label>Escolha os Sabores Entregues:</label>
-                <div id="container-fiado-itens"></div>
-
-                <div style="margin-top:15px; font-weight:bold; font-size:16px;">
-                    Total Devido: R$ <span id="fiado-total-calculado">0.00</span>
-                </div>
-                <button class="btn-primary" style="background-color: #e65100;" onclick="salvarFiado()" style="margin-top:10px;">Anotar Fiado e Baixar Estoque</button>
-            </div>
-
-            <div class="card-box">
-                <h3>📜 Caderneta de Fiados Pendentes</h3>
-                <div id="lista-fiados-salvos"></div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- CALCULADORA DE CUSTOS (G/ML) E PADRÃO -->
-    <div id="tab-calc" class="tab-content">
-        <div class="card-box">
-            <h3>⚖️ Calculadora de Custo por Grama/ML</h3>
-            <p style="font-size: 12px; color: #666; margin-top: -8px;">Descubra o custo do saquinho medindo tamanho variável.</p>
-
-            <div style="text-align: right; margin-bottom: 10px;">
-                <button onclick="toggleCustosFixos()" style="background: none; border: none; color: #00838f; font-size: 12px; cursor: pointer; text-decoration: underline;">
-                    ⚙️ Configurações (Custos Fixos)
-                </button>
-            </div>
-
-            <div id="painel-custos-fixos" style="display: none; background: #fafafa; padding: 12px; border-radius: 8px; border: 1px dashed #ccc; margin-bottom: 15px;">
-                <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #333;">Preços Fixos (Adicionais):</h4>
-                <div class="form-group">
-                    <label>Custo do Saquinho + Laço (R$)</label>
-                    <input type="number" step="0.01" id="custo-saquinho" value="0.05" oninput="calcularCustoJuju()">
-                </div>
-                <div class="form-group">
-                    <label>Margem de Perda no Liquidificador (%)</label>
-                    <input type="number" id="custo-perda" value="5" placeholder="Ex: 5" oninput="calcularCustoJuju()">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Unidade de Medida</label>
-                <select id="calc-unidade" onchange="calcularCustoJuju()">
-                    <option value="g">Gramas (g)</option>
-                    <option value="ml">Mililitros (ml)</option>
-                </select>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex: 1;">
-                    <label>Custo Total da Receita (R$)</label>
-                    <input type="number" step="0.01" id="receita-custo" placeholder="Ex: 20.00" oninput="calcularCustoJuju()">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>Rendimento (g ou ml)</label>
-                    <input type="number" id="receita-rendimento" placeholder="Ex: 1000" oninput="calcularCustoJuju()">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Tamanho deste Juju Específico (g ou ml)</label>
-                <input type="number" id="juju-tamanho" placeholder="Ex: 80" oninput="calcularCustoJuju()">
-            </div>
-
-            <div class="resumo-custo-box">
-                <div>Custo por unidade base: <strong id="res-custo-grama">R$ 0,000</strong></div>
-                <div>Custo do Conteúdo: <strong id="res-custo-recheio">R$ 0,00</strong></div>
-                <div>Extras (Saquinho + Perda): <strong id="res-custo-extras">R$ 0,00</strong></div>
-                <hr style="border: 0; border-top: 1px solid #a5d6a7; margin: 8px 0;">
-                <div style="font-size: 16px; color: #2e7d32;">
-                    <strong>Custo Final deste Juju:</strong> 
-                    <strong id="res-custo-final">R$ 0,00</strong>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-box">
-            <h3>🧮 Calculadora Simples</h3>
-            <input type="text" id="calc-display" class="calc-display" readonly value="0">
-            <div class="calc-grid">
-                <button class="calc-btn clear" onclick="calcClear()">C</button>
-                <button class="calc-btn op" onclick="calcInput('/')">÷</button>
-                <button class="calc-btn op" onclick="calcInput('*')">×</button>
-                <button class="calc-btn op" onclick="calcInput('-')">-</button>
-
-                <button class="calc-btn" onclick="calcInput('7')">7</button>
-                <button class="calc-btn" onclick="calcInput('8')">8</button>
-                <button class="calc-btn" onclick="calcInput('9')">9</button>
-                <button class="calc-btn op" onclick="calcInput('+')">+</button>
-
-                <button class="calc-btn" onclick="calcInput('4')">4</button>
-                <button class="calc-btn" onclick="calcInput('5')">5</button>
-                <button class="calc-btn" onclick="calcInput('6')">6</button>
-                <button class="calc-btn eq" onclick="calcSolve()" style="grid-row: span 2; height: 100%;">=</button>
-
-                <button class="calc-btn" onclick="calcInput('1')">1</button>
-                <button class="calc-btn" onclick="calcInput('2')">2</button>
-                <button class="calc-btn" onclick="calcInput('3')">3</button>
-
-                <button class="calc-btn" onclick="calcInput('0')" style="grid-column: span 2;">0</button>
-                <button class="calc-btn" onclick="calcInput('.')">.</button>
-            </div>
-        </div>
-    </div>
-
+    <h3 style="margin-top: 25px;">Ganhos por Dia (Dinheiro Real)</h3>
+    <ul class="history-list" id="lista-dias">
+      <!-- Inserido dinamicamente pelo JS -->
+    </ul>
+  </div>
 </div>
 
-<!-- MENU INFERIOR -->
-<div class="nav-menu">
-    <button class="nav-btn active" onclick="trocarAba('tab-inicio', this)">
-        <span class="icon">🏠</span>Início
-    </button>
-    <button class="nav-btn" onclick="trocarAba('tab-cadastrar', this)">
-        <span class="icon">➕</span>Sabor
-    </button>
-    <button class="nav-btn" onclick="trocarAba('tab-venda', this)">
-        <span class="icon">💰</span>Vender
-    </button>
-    <button class="nav-btn" onclick="trocarAba('tab-estoque', this)">
-        <span class="icon">📦</span>Estoque
-    </button>
-    <button class="nav-btn" onclick="trocarAba('tab-reservas', this)">
-        <span class="icon">📝</span>Reservas/Fiados
-    </button>
-    <button class="nav-btn" onclick="trocarAba('tab-calc', this)">
-        <span class="icon">🧮</span>Calc
-    </button>
+<!-- MODAL OCULTO: Histórico de Vendas Completo -->
+<div class="modal" id="modal-historico">
+  <div class="modal-content">
+    <h3>Histórico de Vendas</h3>
+    <ul class="history-list" id="lista-vendas-detalhada">
+      <!-- Inserido dinamicamente pelo JS -->
+    </ul>
+    <button class="btn btn-secondary" onclick="toggleModal(false)" style="margin-top: 15px;">Fechar</button>
+  </div>
 </div>
-
-<!-- FIREBASE INTEGRATION -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyAkNiUJdKt_mAIMIJAGdauJfw_zYheFuio",
-        authDomain: "gerenciador-de-financas-juju.firebaseapp.com",
-        databaseURL: "https://gerenciador-de-financas-juju-default-rtdb.firebaseio.com",
-        projectId: "gerenciador-de-financas-juju",
-        storageBucket: "gerenciador-de-financas-juju.firebasestorage.app",
-        messagingSenderId: "592090852387",
-        appId: "1:592090852387:web:52b052f907d0354b9c9596"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const dbRef = ref(db, 'dados_geladinhos');
-
-    window.dados = {
-        produtos: [],
-        financeiro: { faturamento: 0, receitaCaixa: 0, reserva: 0, lucro: 0 },
-        historico: [],
-        reservas: [],
-        fiados: []
-    };
-
-    onValue(dbRef, (snapshot) => {
-        const val = snapshot.val();
-        if (val) {
-            window.dados = {
-                produtos: val.produtos || [],
-                financeiro: val.financeiro || { faturamento: 0, receitaCaixa: 0, reserva: 0, lucro: 0 },
-                historico: val.historico || [],
-                reservas: val.reservas || [],
-                fiados: val.fiados || []
-            };
-        }
-        window.atualizarInterface();
-    });
-
-    window.salvarDados = function() {
-        set(dbRef, window.dados);
-    };
-</script>
 
 <script>
-    function parseEntradaFloat(txt) {
-        if (!txt) return 0;
-        let limpo = txt.toString().replace(',', '.');
-        return parseFloat(limpo) || 0;
+  // Estado da aplicação
+  let dados = {
+    saldoCaixa: 0.00,
+    totalGanho: 0.00,
+    totalJujubas: 0,
+    vendas: [], // { id, data, qtd, valor }
+    saidas: [], // { id, data, descricao, valor }
+    ganhosPorDia: {} // "AAAA-MM-DD": valor
+  };
+
+  // Funções de navegação de abas
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  function toggleModal(show) {
+    document.getElementById('modal-historico').style.display = show ? 'flex' : 'none';
+  }
+
+  // Utilitário de formatação
+  function formatarMoeda(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function obterDataAtual() {
+    const hoje = new Date();
+    return hoje.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+  }
+
+  function formatarDataBR(dataISO) {
+    const partes = dataISO.split('-');
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+
+  // Ações Financeiras
+  function registrarEntrada() {
+    const qtdInput = document.getElementById('qtd-jujubas');
+    const valorInput = document.getElementById('valor-entrada');
+    
+    const qtd = parseInt(qtdInput.value) || 0;
+    const valor = parseFloat(valorInput.value) || 0;
+
+    if (valor <= 0) {
+      alert('Informe um valor válido de entrada.');
+      return;
     }
 
-    function trocarAba(abaId, btn) {
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const hoje = obterDataAtual();
 
-        document.getElementById(abaId).classList.add('active');
-        if (btn) btn.classList.add('active');
+    // Atualiza Saldos e Totais
+    dados.saldoCaixa += valor;
+    dados.totalGanho += valor;
+    dados.totalJujubas += qtd;
 
-        if (abaId === 'tab-venda') renderizarFormVenda();
-        if (abaId === 'tab-reservas') renderizarFormReserva();
-        if (abaId === 'tab-estoque') renderizarEstoque();
+    // Atualiza Histórico por Dia
+    if (!dados.ganhosPorDia[hoje]) {
+      dados.ganhosPorDia[hoje] = 0;
     }
+    dados.ganhosPorDia[hoje] += valor;
 
-    function trocarSubAba(sub) {
-        document.getElementById('btn-sub-reserva').classList.remove('active');
-        document.getElementById('btn-sub-fiado').classList.remove('active');
-        document.getElementById('sub-conteudo-reserva').style.display = 'none';
-        document.getElementById('sub-conteudo-fiado').style.display = 'none';
-
-        if (sub === 'reserva') {
-            document.getElementById('btn-sub-reserva').classList.add('active');
-            document.getElementById('sub-conteudo-reserva').style.display = 'block';
-            renderizarFormReserva();
-        } else {
-            document.getElementById('btn-sub-fiado').classList.add('active');
-            document.getElementById('sub-conteudo-fiado').style.display = 'block';
-            renderizarFormFiado();
-        }
-    }
-
-    function toggleOpcoesAvancadas() {
-        const p = document.getElementById('painel-avancado');
-        p.style.display = p.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function toggleCustosFixos() {
-        const p = document.getElementById('painel-custos-fixos');
-        p.style.display = p.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function calcularCustoJuju() {
-        const custoReceita = parseEntradaFloat(document.getElementById('receita-custo').value);
-        const rendimento = parseEntradaFloat(document.getElementById('receita-rendimento').value);
-        const tamanhoJuju = parseEntradaFloat(document.getElementById('juju-tamanho').value);
-        const saquinho = parseEntradaFloat(document.getElementById('custo-saquinho').value);
-        const pctPerda = parseEntradaFloat(document.getElementById('custo-perda').value);
-        const unidade = document.getElementById('calc-unidade').value;
-
-        if (custoReceita <= 0 || rendimento <= 0) {
-            document.getElementById('res-custo-grama').innerText = `R$ 0,000 / ${unidade}`;
-            document.getElementById('res-custo-recheio').innerText = "R$ 0,00";
-            document.getElementById('res-custo-extras').innerText = "R$ 0,00";
-            document.getElementById('res-custo-final').innerText = "R$ 0,00";
-            return;
-        }
-
-        const custoPorGrama = custoReceita / rendimento;
-        const custoRecheioUnitario = custoPorGrama * tamanhoJuju;
-        const valorPerda = custoRecheioUnitario * (pctPerda / 100);
-        const extras = saquinho + valorPerda;
-        const custoFinal = custoRecheioUnitario + extras;
-
-        document.getElementById('res-custo-grama').innerText = `R$ ${custoPorGrama.toFixed(3)} / ${unidade}`;
-        document.getElementById('res-custo-recheio').innerText = `R$ ${custoRecheioUnitario.toFixed(2)}`;
-        document.getElementById('res-custo-extras').innerText = `R$ ${extras.toFixed(2)}`;
-        document.getElementById('res-custo-final').innerText = `R$ ${custoFinal.toFixed(2)}`;
-    }
-
-    function processarEntradaFinanceira(valor) {
-        valor = Math.round(valor * 100) / 100;
-        window.dados.financeiro.faturamento = Math.round((window.dados.financeiro.faturamento + valor) * 100) / 100;
-        let valorRestante = valor;
-
-        let faltaReceita = 50 - (window.dados.financeiro.receitaCaixa || 0);
-        if (faltaReceita > 0) {
-            let alocarReceita = Math.min(valorRestante, faltaReceita);
-            window.dados.financeiro.receitaCaixa = Math.round(((window.dados.financeiro.receitaCaixa || 0) + alocarReceita) * 100) / 100;
-            valorRestante = Math.round((valorRestante - alocarReceita) * 100) / 100;
-        }
-
-        if (valorRestante > 0) {
-            let faltaReserva = 50 - (window.dados.financeiro.reserva || 0);
-            if (faltaReserva > 0) {
-                let alocarReserva = Math.min(valorRestante, faltaReserva);
-                window.dados.financeiro.reserva = Math.round(((window.dados.financeiro.reserva || 0) + alocarReserva) * 100) / 100;
-                valorRestante = Math.round((valorRestante - alocarReserva) * 100) / 100;
-            }
-        }
-
-        if (valorRestante > 0) {
-            window.dados.financeiro.lucro = Math.round(((window.dados.financeiro.lucro || 0) + valorRestante) * 100) / 100;
-        }
-    }
-
-    function processarRetiradaFinanceira(valor) {
-        valor = Math.round(valor * 100) / 100;
-        window.dados.financeiro.faturamento = Math.max(0, Math.round((window.dados.financeiro.faturamento - valor) * 100) / 100);
-
-        let valorRetirar = valor;
-
-        if (window.dados.financeiro.lucro > 0) {
-            let abater = Math.min(window.dados.financeiro.lucro, valorRetirar);
-            window.dados.financeiro.lucro = Math.round((window.dados.financeiro.lucro - abater) * 100) / 100;
-            valorRetirar = Math.round((valorRetirar - abater) * 100) / 100;
-        }
-
-        if (valorRetirar > 0 && window.dados.financeiro.reserva > 0) {
-            let abater = Math.min(window.dados.financeiro.reserva, valorRetirar);
-            window.dados.financeiro.reserva = Math.round((window.dados.financeiro.reserva - abater) * 100) / 100;
-            valorRetirar = Math.round((valorRetirar - abater) * 100) / 100;
-        }
-
-        if (valorRetirar > 0 && window.dados.financeiro.receitaCaixa > 0) {
-            let abater = Math.min(window.dados.financeiro.receitaCaixa, valorRetirar);
-            window.dados.financeiro.receitaCaixa = Math.round((window.dados.financeiro.receitaCaixa - abater) * 100) / 100;
-            valorRetirar = Math.round((valorRetirar - abater) * 100) / 100;
-        }
-    }
-
-    function atualizarInterface() {
-        if (!window.dados) return;
-
-        const fin = window.dados.financeiro;
-        document.getElementById('fat-total').innerText = `R$ ${(fin.faturamento || 0).toFixed(2)}`;
-        document.getElementById('receita-total').innerText = `R$ ${(fin.receitaCaixa || 0).toFixed(2)} / 50`;
-        document.getElementById('reserva-total').innerText = `R$ ${(fin.reserva || 0).toFixed(2)} / 50`;
-        
-        const lucroTotal = fin.lucro || 0;
-        document.getElementById('lucro-total').innerText = `R$ ${lucroTotal.toFixed(2)}`;
-        
-        const metadeLucro = lucroTotal / 2;
-        document.getElementById('lucro-gabriel').innerText = `R$ ${metadeLucro.toFixed(2)}`;
-        document.getElementById('lucro-enrico').innerText = `R$ ${metadeLucro.toFixed(2)}`;
-
-        // SOMA DO A RECEBER (RESERVAS + FIADOS)
-        let totalReservas = (window.dados.reservas || []).reduce((acc, r) => acc + (r.total || 0), 0);
-        let totalFiados = (window.dados.fiados || []).reduce((acc, f) => acc + (f.total || 0), 0);
-        
-        document.getElementById('a-receber-total').innerText = `R$ ${(totalReservas + totalFiados).toFixed(2)}`;
-
-        const listaHist = document.getElementById('lista-historico');
-        listaHist.innerHTML = '';
-        if (!window.dados.historico || window.dados.historico.length === 0) {
-            listaHist.innerHTML = '<p style="font-size:13px; color:#555;">Nenhuma venda registrada ainda.</p>';
-        } else {
-            window.dados.historico.slice().reverse().forEach((h, indexInvertido) => {
-                const realIndex = window.dados.historico.length - 1 - indexInvertido;
-                const div = document.createElement('div');
-                div.className = 'historico-item';
-                div.innerHTML = `
-                    <span>[${h.data}] <strong>${h.descricao}</strong> = R$ ${h.total.toFixed(2)}</span>
-                    <button class="btn-action btn-excluir" onclick="excluirHistorico(${realIndex})">🗑️</button>
-                `;
-                listaHist.appendChild(div);
-            });
-        }
-    }
-
-    function adicionarFaturamentoManual() {
-        const entrada = prompt("Digite o valor a adicionar (ex: 15,50 ou 15.50):");
-        const valor = parseEntradaFloat(entrada);
-        if (valor <= 0) return;
-
-        processarEntradaFinanceira(valor);
-
-        const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-        window.dados.historico.push({
-            data: dataAtual,
-            descricao: "Ajuste (+)",
-            total: valor
-        });
-
-        window.salvarDados();
-        alert('✅ Valor adicionado!');
-    }
-
-    function retirarFaturamentoManual() {
-        const entrada = prompt("Digite o valor a retirar (ex: 77,54 ou 77.54):");
-        const valor = parseEntradaFloat(entrada);
-        if (valor <= 0) return;
-
-        processarRetiradaFinanceira(valor);
-
-        const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-        window.dados.historico.push({
-            data: dataAtual,
-            descricao: "Ajuste (-)",
-            total: -valor
-        });
-
-        window.salvarDados();
-        alert('✅ Valor retirado!');
-    }
-
-    function excluirHistorico(idx) {
-        if (confirm("Deseja remover este registro do histórico?")) {
-            window.dados.historico.splice(idx, 1);
-            window.salvarDados();
-        }
-    }
-
-    document.getElementById('form-cadastrar').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const nome = document.getElementById('cad-nome').value.trim();
-        const preco = parseEntradaFloat(document.getElementById('cad-preco').value);
-        const custo = parseEntradaFloat(document.getElementById('cad-custo').value);
-        const estoque = parseInt(document.getElementById('cad-estoque').value) || 0;
-
-        window.dados.produtos.push({ nome, preco, custo, estoque, vendas: 0 });
-        window.salvarDados();
-        e.target.reset();
-        alert('✅ Sabor cadastrado com sucesso!');
+    // Registra Venda Detalhada
+    dados.vendas.unshift({
+      id: Date.now(),
+      data: new Date().toLocaleString('pt-BR'),
+      qtd: qtd,
+      valor: valor
     });
 
-    function renderizarFormVenda() {
-        const container = document.getElementById('container-venda-itens');
-        container.innerHTML = '';
+    // Limpa Inputs e Atualiza Interface
+    qtdInput.value = '';
+    valorInput.value = '';
+    atualizarUI();
+  }
 
-        if (!window.dados.produtos || window.dados.produtos.length === 0) {
-            container.innerHTML = '<p style="color:red;">⚠️ Nenhum sabor cadastrado!</p>';
-            return;
-        }
+  function registrarSaida() {
+    const descInput = document.getElementById('desc-saida');
+    const valorInput = document.getElementById('valor-saida');
 
-        window.dados.produtos.forEach((p, idx) => {
-            const div = document.createElement('div');
-            div.className = 'item-carrinho';
-            div.innerHTML = `
-                <span><strong>${p.nome}</strong> (R$ ${p.preco.toFixed(2)}) - Estq: ${p.estoque}</span>
-                <input type="number" min="0" max="${p.estoque}" value="0" onchange="calcularTotalVenda()" id="venda-qtd-${idx}">
-            `;
-            container.appendChild(div);
-        });
-        calcularTotalVenda();
+    const desc = descInput.value.trim() || 'Gasto geral';
+    const valor = parseFloat(valorInput.value) || 0;
+
+    if (valor <= 0) {
+      alert('Informe um valor válido de saída.');
+      return;
     }
 
-    function calcularTotalVenda() {
-        let total = 0;
-        window.dados.produtos.forEach((p, idx) => {
-            const input = document.getElementById(`venda-qtd-${idx}`);
-            if (input) {
-                total += (parseInt(input.value) || 0) * p.preco;
-            }
-        });
-        document.getElementById('venda-total-calculado').innerText = total.toFixed(2);
+    // Deduz do Saldo em Caixa apenas (não diminui o Total Ganho)
+    dados.saldoCaixa -= valor;
+
+    dados.saidas.unshift({
+      id: Date.now(),
+      data: new Date().toLocaleString('pt-BR'),
+      descricao: desc,
+      valor: valor
+    });
+
+    descInput.value = '';
+    valorInput.value = '';
+    atualizarUI();
+  }
+
+  // Atualização da Interface do Usuário
+  function atualizarUI() {
+    // 1. Aba Principal
+    document.getElementById('saldo-caixa').innerText = formatarMoeda(dados.saldoCaixa);
+
+    // 2. Aba Estatísticas
+    document.getElementById('total-ganho').innerText = formatarMoeda(dados.totalGanho);
+    document.getElementById('total-jujubas').innerText = `${dados.totalJujubas} un.`;
+
+    // Lista por Dias
+    const listaDiasEl = document.getElementById('lista-dias');
+    listaDiasEl.innerHTML = '';
+    
+    const diasOrdenados = Object.keys(dados.ganhosPorDia).sort().reverse();
+    
+    if (diasOrdenados.length === 0) {
+      listaDiasEl.innerHTML = '<li class="history-item"><span style="color:var(--text-light)">Nenhum ganho registrado ainda.</span></li>';
+    } else {
+      diasOrdenados.forEach(diaISO => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.innerHTML = `
+          <span>${formatarDataBR(diaISO)}</span>
+          <span class="val-positive">+ ${formatarMoeda(dados.ganhosPorDia[diaISO])}</span>
+        `;
+        listaDiasEl.appendChild(li);
+      });
     }
 
-    function concluirVenda() {
-        let faturamentoVenda = 0;
-        let itensComprados = [];
+    // 3. Modal Detalhado de Vendas
+    const listaVendasEl = document.getElementById('lista-vendas-detalhada');
+    listaVendasEl.innerHTML = '';
 
-        window.dados.produtos.forEach((p, idx) => {
-            const input = document.getElementById(`venda-qtd-${idx}`);
-            const qtd = parseInt(input.value) || 0;
-
-            if (qtd > 0) {
-                if (qtd > p.estoque) {
-                    alert(`Estoque insuficiente de ${p.nome}!`);
-                    return;
-                }
-                p.estoque -= qtd;
-                p.vendas += qtd;
-                faturamentoVenda += qtd * p.preco;
-                itensComprados.push(`${qtd}x ${p.nome}`);
-            }
-        });
-
-        if (faturamentoVenda === 0) {
-            alert('Selecione pelo menos um sabor para vender.');
-            return;
-        }
-
-        processarEntradaFinanceira(faturamentoVenda);
-
-        const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-        window.dados.historico.push({
-            data: dataAtual,
-            descricao: itensComprados.join(', '),
-            total: faturamentoVenda
-        });
-
-        window.salvarDados();
-        renderizarFormVenda();
-        alert('🎉 Venda registrada com sucesso!');
+    if (dados.vendas.length === 0) {
+      listaVendasEl.innerHTML = '<li class="history-item"><span>Nenhuma venda registrada.</span></li>';
+    } else {
+      dados.vendas.forEach(venda => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.innerHTML = `
+          <div>
+            <strong>${venda.qtd}x Jujuba(s)</strong><br>
+            <small style="color:var(--text-light)">${venda.data}</small>
+          </div>
+          <span class="val-positive">+ ${formatarMoeda(venda.valor)}</span>
+        `;
+        listaVendasEl.appendChild(li);
+      });
     }
+  }
 
-    function renderizarEstoque() {
-        const tbody = document.getElementById('tabela-estoque');
-        tbody.innerHTML = '';
-        let totalQtd = 0;
-        let totalValor = 0;
-
-        window.dados.produtos.forEach((p, idx) => {
-            totalQtd += p.estoque;
-            totalValor += (p.estoque * p.preco);
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${p.nome}</strong></td>
-                <td>R$ ${p.preco.toFixed(2)}</td>
-                <td>${p.estoque} un.</td>
-                <td>
-                    <button class="btn-action btn-repor" onclick="reporEstoque(${idx})" title="Repor">📦</button>
-                    <button class="btn-action btn-editar" onclick="editarSabor(${idx})" title="Editar">✏️</button>
-                    <button class="btn-action btn-excluir" onclick="excluirSabor(${idx})" title="Excluir">🗑️</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        document.getElementById('total-qtd-estoque').innerText = totalQtd;
-        document.getElementById('total-valor-estoque').innerText = `R$ ${totalValor.toFixed(2)}`;
-    }
-
-    function reporEstoque(idx) {
-        const qtd = parseInt(prompt(`Quantas unidades adicionar ao estoque de "${window.dados.produtos[idx].nome}"?`));
-        if (qtd > 0) {
-            window.dados.produtos[idx].estoque += qtd;
-            window.salvarDados();
-            renderizarEstoque();
-        }
-    }
-
-    function editarSabor(idx) {
-        const p = window.dados.produtos[idx];
-        const novoNome = prompt("Nome do Sabor:", p.nome);
-        if (novoNome === null) return;
-
-        const novoPreco = parseEntradaFloat(prompt("Preço de Venda (R$):", p.preco));
-        const novoCusto = parseEntradaFloat(prompt("Custo Unitário (R$):", p.custo || 0));
-        const novoEstoque = parseInt(prompt("Quantidade em Estoque:", p.estoque));
-
-        p.nome = novoNome.trim() || p.nome;
-        p.preco = novoPreco;
-        p.custo = novoCusto;
-        p.estoque = isNaN(novoEstoque) ? p.estoque : novoEstoque;
-
-        window.salvarDados();
-        renderizarEstoque();
-        alert('✅ Sabor atualizado!');
-    }
-
-    function excluirSabor(idx) {
-        if (confirm(`Excluir o sabor "${window.dados.produtos[idx].nome}"?`)) {
-            window.dados.produtos.splice(idx, 1);
-            window.salvarDados();
-            renderizarEstoque();
-        }
-    }
-
-    /* RENDERIZAÇÃO E LÓGICA DE RESERVAS */
-    function renderizarFormReserva() {
-        const container = document.getElementById('container-reserva-itens');
-        container.innerHTML = '';
-        
-        window.dados.produtos.forEach((p, idx) => {
-            const div = document.createElement('div');
-            div.className = 'item-carrinho';
-            div.innerHTML = `
-                <span>${p.nome} (R$ ${p.preco.toFixed(2)})</span>
-                <input type="number" min="0" value="0" onchange="calcularTotalReserva()" id="reserva-qtd-${idx}">
-            `;
-            container.appendChild(div);
-        });
-
-        document.getElementById('reserva-desconto').value = '';
-        calcularTotalReserva();
-
-        const divSalvas = document.getElementById('lista-reservas-salvas');
-        divSalvas.innerHTML = '';
-        if (!window.dados.reservas || window.dados.reservas.length === 0) {
-            divSalvas.innerHTML = '<p style="font-size:13px; color:#666;">Nenhuma reserva ativa.</p>';
-        } else {
-            window.dados.reservas.forEach((res, idx) => {
-                const box = document.createElement('div');
-                box.style.cssText = "background:#f9f9f9; padding:10px; border-radius:6px; margin-top:8px; border-left:4px solid var(--secondary);";
-                box.innerHTML = `
-                    <strong>👤 ${res.cliente}</strong><br>
-                    <small>${res.itens} - <strong>Total: R$ ${res.total.toFixed(2)}</strong></small>
-                    <div style="margin-top:8px;">
-                        <button class="btn-action btn-concluir" onclick="concluirReserva(${idx})">✅ Entregar/Vender</button>
-                        <button class="btn-action btn-editar" onclick="editarReserva(${idx})">✏️ Editar</button>
-                        <button class="btn-action btn-excluir" onclick="excluirReserva(${idx})">🗑️ Excluir</button>
-                    </div>
-                `;
-                divSalvas.appendChild(box);
-            });
-        }
-    }
-
-    function calcularTotalReserva() {
-        let total = 0;
-        window.dados.produtos.forEach((p, idx) => {
-            const input = document.getElementById(`reserva-qtd-${idx}`);
-            if (input) {
-                total += (parseInt(input.value) || 0) * p.preco;
-            }
-        });
-
-        const desconto = parseEntradaFloat(document.getElementById('reserva-desconto').value);
-        total = Math.max(0, total - desconto);
-
-        document.getElementById('reserva-total-calculado').innerText = total.toFixed(2);
-    }
-
-    function salvarReserva() {
-        const cliente = document.getElementById('reserva-cliente').value.trim();
-        if (!cliente) {
-            alert('Digite o nome do cliente.');
-            return;
-        }
-
-        let totalSoma = 0;
-        let itens = [];
-        window.dados.produtos.forEach((p, idx) => {
-            const input = document.getElementById(`reserva-qtd-${idx}`);
-            const qtd = parseInt(input.value) || 0;
-            if (qtd > 0) {
-                totalSoma += qtd * p.preco;
-                itens.push(`${qtd}x ${p.nome}`);
-            }
-        });
-
-        if (totalSoma === 0) {
-            alert('Selecione pelo menos um item.');
-            return;
-        }
-
-        const desconto = parseEntradaFloat(document.getElementById('reserva-desconto').value);
-        const totalFinal = Math.max(0, totalSoma - desconto);
-
-        let descTexto = desconto > 0 ? ` (Desc: R$ ${desconto.toFixed(2)})` : '';
-        window.dados.reservas.push({ cliente, itens: itens.join(', ') + descTexto, total: totalFinal });
-        window.salvarDados();
-        document.getElementById('reserva-cliente').value = '';
-        document.getElementById('reserva-desconto').value = '';
-        renderizarFormReserva();
-        alert('📌 Encomenda programada salva!');
-    }
-
-    function concluirReserva(idx) {
-        const res = window.dados.reservas[idx];
-        if (confirm(`Confirmar venda da encomenda de "${res.cliente}" no valor de R$ ${res.total.toFixed(2)}?`)) {
-            processarEntradaFinanceira(res.total);
-
-            const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            window.dados.historico.push({
-                data: dataAtual,
-                descricao: `Encomenda: ${res.cliente} (${res.itens})`,
-                total: res.total
-            });
-
-            window.dados.reservas.splice(idx, 1);
-            window.salvarDados();
-            renderizarFormReserva();
-            alert('🎉 Venda de encomenda concluída!');
-        }
-    }
-
-    function editarReserva(idx) {
-        const res = window.dados.reservas[idx];
-        const novoCliente = prompt("Nome do Cliente:", res.cliente);
-        if (novoCliente === null) return;
-
-        const novosItens = prompt("Descrição dos itens:", res.itens);
-        if (novosItens === null) return;
-
-        const novoTotal = parseEntradaFloat(prompt("Valor Total (R$):", res.total));
-
-        res.cliente = novoCliente.trim() || res.cliente;
-        res.itens = novosItens.trim() || res.itens;
-        res.total = novoTotal;
-
-        window.salvarDados();
-        renderizarFormReserva();
-        alert('✅ Encomenda atualizada!');
-    }
-
-    function excluirReserva(idx) {
-        if (confirm("Deseja excluir esta reserva?")) {
-            window.dados.reservas.splice(idx, 1);
-            window.salvarDados();
-            renderizarFormReserva();
-        }
-    }
-
-    /* RENDERIZAÇÃO E LÓGICA DE FIADOS */
-    function renderizarFormFiado() {
-        const container = document.getElementById('container-fiado-itens');
-        container.innerHTML = '';
-        
-        window.dados.produtos.forEach((p, idx) => {
-            const div = document.createElement('div');
-            div.className = 'item-carrinho';
-            div.innerHTML = `
-                <span><strong>${p.nome}</strong> (R$ ${p.preco.toFixed(2)}) - Estq: ${p.estoque}</span>
-                <input type="number" min="0" max="${p.estoque}" value="0" onchange="calcularTotalFiado()" id="fiado-qtd-${idx}">
-            `;
-            container.appendChild(div);
-        });
-
-        calcularTotalFiado();
-
-        const divSalvas = document.getElementById('lista-fiados-salvos');
-        divSalvas.innerHTML = '';
-        if (!window.dados.fiados || window.dados.fiados.length === 0) {
-            divSalvas.innerHTML = '<p style="font-size:13px; color:#666;">Nenhum fiado pendente.</p>';
-        } else {
-            window.dados.fiados.forEach((f, idx) => {
-                const box = document.createElement('div');
-                box.style.cssText = "background:#fff3e0; padding:10px; border-radius:6px; margin-top:8px; border-left:4px solid #e65100;";
-                box.innerHTML = `
-                    <strong style="color:#d32f2f;">📌 Devedor: ${f.cliente}</strong><br>
-                    <small>${f.itens} - <strong>Devendo: R$ ${f.total.toFixed(2)}</strong></small>
-                    <div style="margin-top:8px;">
-                        <button class="btn-action btn-concluir" onclick="quitarFiado(${idx})">💵 Quitar / Receber</button>
-                        <button class="btn-action btn-editar" onclick="editarFiado(${idx})">✏️ Editar</button>
-                        <button class="btn-action btn-excluir" onclick="excluirFiado(${idx})">🗑️ Cancelar</button>
-                    </div>
-                `;
-                divSalvas.appendChild(box);
-            });
-        }
-    }
-
-    function calcularTotalFiado() {
-        let total = 0;
-        window.dados.produtos.forEach((p, idx) => {
-            const input = document.getElementById(`fiado-qtd-${idx}`);
-            if (input) {
-                total += (parseInt(input.value) || 0) * p.preco;
-            }
-        });
-
-        document.getElementById('fiado-total-calculado').innerText = total.toFixed(2);
-    }
-
-    function salvarFiado() {
-        const cliente = document.getElementById('fiado-cliente').value.trim();
-        if (!cliente) {
-            alert('Digite o nome da pessoa.');
-            return;
-        }
-
-        let totalSoma = 0;
-        let itens = [];
-        let erroEstoque = false;
-
-        window.dados.produtos.forEach((p, idx) => {
-            const input = document.getElementById(`fiado-qtd-${idx}`);
-            const qtd = parseInt(input.value) || 0;
-            if (qtd > 0) {
-                if (qtd > p.estoque) {
-                    alert(`Estoque insuficiente de ${p.nome}!`);
-                    erroEstoque = true;
-                    return;
-                }
-                totalSoma += qtd * p.preco;
-                itens.push(`${qtd}x ${p.nome}`);
-            }
-        });
-
-        if (erroEstoque) return;
-
-        if (totalSoma === 0) {
-            alert('Selecione pelo menos um item.');
-            return;
-        }
-
-        // BAIXA O ESTOQUE IMEDIATAMENTE
-        window.dados.produtos.forEach((p, idx) => {
-            const input = document.getElementById(`fiado-qtd-${idx}`);
-            const qtd = parseInt(input.value) || 0;
-            if (qtd > 0) {
-                p.estoque -= qtd;
-                p.vendas += qtd;
-            }
-        });
-
-        if (!window.dados.fiados) window.dados.fiados = [];
-        window.dados.fiados.push({ cliente, itens: itens.join(', '), total: totalSoma });
-
-        window.salvarDados();
-        document.getElementById('fiado-cliente').value = '';
-        renderizarFormFiado();
-        alert('📌 Fiado registrado e estoque atualizado com sucesso!');
-    }
-
-    function quitarFiado(idx) {
-        const f = window.dados.fiados[idx];
-        if (confirm(`Confirmar o recebimento do fiado de "${f.cliente}" no valor de R$ ${f.total.toFixed(2)}?`)) {
-            processarEntradaFinanceira(f.total);
-
-            const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            window.dados.historico.push({
-                data: dataAtual,
-                descricao: `Fiado Pago: ${f.cliente} (${f.itens})`,
-                total: f.total
-            });
-
-            window.dados.fiados.splice(idx, 1);
-            window.salvarDados();
-            renderizarFormFiado();
-            alert('💵 Pagamento do fiado recebido com sucesso!');
-        }
-    }
-
-    function editarFiado(idx) {
-        const f = window.dados.fiados[idx];
-        const novoCliente = prompt("Nome da Pessoa:", f.cliente);
-        if (novoCliente === null) return;
-
-        const novosItens = prompt("Descrição dos itens:", f.itens);
-        if (novosItens === null) return;
-
-        const novoTotal = parseEntradaFloat(prompt("Valor Devido (R$):", f.total));
-
-        f.cliente = novoCliente.trim() || f.cliente;
-        f.itens = novosItens.trim() || f.itens;
-        f.total = novoTotal;
-
-        window.salvarDados();
-        renderizarFormFiado();
-        alert('✅ Registro de fiado atualizado!');
-    }
-
-    function excluirFiado(idx) {
-        if (confirm("Deseja cancelar este fiado? (Atenção: Os produtos já foram baixados do estoque anteriormente).")) {
-            window.dados.fiados.splice(idx, 1);
-            window.salvarDados();
-            renderizarFormFiado();
-        }
-    }
-
-    /* CALCULADORA SIMPLES */
-    let calcVal = "0";
-
-    function calcInput(char) {
-        if (calcVal === "0" && char !== ".") {
-            calcVal = char;
-        } else {
-            calcVal += char;
-        }
-        document.getElementById('calc-display').value = calcVal;
-    }
-
-    function calcClear() {
-        calcVal = "0";
-        document.getElementById('calc-display').value = calcVal;
-    }
-
-    function calcSolve() {
-        try {
-            calcVal = String(eval(calcVal));
-            document.getElementById('calc-display').value = calcVal;
-        } catch (e) {
-            document.getElementById('calc-display').value = "Erro";
-            calcVal = "0";
-        }
-    }
+  // Inicialização
+  atualizarUI();
 </script>
 
 </body>
