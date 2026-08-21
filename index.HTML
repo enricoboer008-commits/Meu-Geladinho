@@ -180,6 +180,27 @@
             font-size: 13px;
         }
 
+        /* NAVEGAÇÃO SUB-ABAS (INTERNA) */
+        .sub-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .sub-btn {
+            flex: 1;
+            padding: 8px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #555;
+        }
+        .sub-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
         .calc-display {
             width: 100%;
             height: 50px;
@@ -251,7 +272,7 @@
                 <p id="lucro-total">R$ 0,00</p>
             </div>
             <div class="card-stat-central areceber">
-                <h4>A Receber (Reservas)</h4>
+                <h4>A Receber (Reservas + Fiados)</h4>
                 <p id="a-receber-total">R$ 0,00</p>
             </div>
         </div>
@@ -349,38 +370,72 @@
         </div>
     </div>
 
-    <!-- RESERVAS -->
+    <!-- ABA COMPARTILHADA: RESERVAS E FIADOS -->
     <div id="tab-reservas" class="tab-content">
-        <div class="card-box">
-            <h3>📝 Criar Nova Reserva</h3>
-            <div class="form-group">
-                <label>Nome do Cliente</label>
-                <input type="text" id="reserva-cliente" placeholder="Ex: João (Apto 102)">
-            </div>
-            <label>Escolha os Sabores:</label>
-            <div id="container-reserva-itens"></div>
-
-            <div class="form-group" style="margin-top: 15px;">
-                <label>Desconto Especial (R$):</label>
-                <input type="number" step="0.01" id="reserva-desconto" placeholder="0.00" oninput="calcularTotalReserva()">
-            </div>
-
-            <div style="margin-top:15px; font-weight:bold; font-size:16px;">
-                Total da Reserva: R$ <span id="reserva-total-calculado">0.00</span>
-            </div>
-            <button class="btn-primary" onclick="salvarReserva()" style="margin-top:10px;">Salvar Encomenda</button>
+        
+        <!-- BOTOES DE SUB-ABAS -->
+        <div class="sub-nav">
+            <button id="btn-sub-reserva" class="sub-btn active" onclick="trocarSubAba('reserva')">📅 Encomendas Programadas</button>
+            <button id="btn-sub-fiado" class="sub-btn" onclick="trocarSubAba('fiado')">📌 Fiados (Pagar Depois)</button>
         </div>
 
-        <div class="card-box">
-            <h3>📋 Encomendas Salvas</h3>
-            <div id="lista-reservas-salvas"></div>
+        <!-- CONTEÚDO DA SUB-ABA ENCOMENDAS / RESERVAS -->
+        <div id="sub-conteudo-reserva">
+            <div class="card-box">
+                <h3>📝 Nova Encomenda Programada</h3>
+                <p style="font-size: 12px; color: #666; margin-top: -8px;">O estoque só será baixado no momento da entrega do produto.</p>
+                <div class="form-group">
+                    <label>Nome do Cliente</label>
+                    <input type="text" id="reserva-cliente" placeholder="Ex: João (Apto 102)">
+                </div>
+                <label>Escolha os Sabores:</label>
+                <div id="container-reserva-itens"></div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Desconto Especial (R$):</label>
+                    <input type="number" step="0.01" id="reserva-desconto" placeholder="0.00" oninput="calcularTotalReserva()">
+                </div>
+
+                <div style="margin-top:15px; font-weight:bold; font-size:16px;">
+                    Total da Reserva: R$ <span id="reserva-total-calculado">0.00</span>
+                </div>
+                <button class="btn-primary" onclick="salvarReserva()" style="margin-top:10px;">Salvar Encomenda</button>
+            </div>
+
+            <div class="card-box">
+                <h3>📋 Lista de Encomendas Programadas</h3>
+                <div id="lista-reservas-salvas"></div>
+            </div>
         </div>
+
+        <!-- CONTEÚDO DA SUB-ABA FIADOS -->
+        <div id="sub-conteudo-fiado" style="display: none;">
+            <div class="card-box">
+                <h3>📌 Novo Fiado</h3>
+                <p style="font-size: 12px; color: #d32f2f; margin-top: -8px;">⚠️ O juju já é entregue agora, portanto o estoque É BAIXADO IMEDIATAMENTE.</p>
+                <div class="form-group">
+                    <label>Nome do Devedor / Vizinho</label>
+                    <input type="text" id="fiado-cliente" placeholder="Ex: Pedro (Apto 304)">
+                </div>
+                <label>Escolha os Sabores Entregues:</label>
+                <div id="container-fiado-itens"></div>
+
+                <div style="margin-top:15px; font-weight:bold; font-size:16px;">
+                    Total Devido: R$ <span id="fiado-total-calculado">0.00</span>
+                </div>
+                <button class="btn-primary" style="background-color: #e65100;" onclick="salvarFiado()" style="margin-top:10px;">Anotar Fiado e Baixar Estoque</button>
+            </div>
+
+            <div class="card-box">
+                <h3>📜 Caderneta de Fiados Pendentes</h3>
+                <div id="lista-fiados-salvos"></div>
+            </div>
+        </div>
+
     </div>
 
     <!-- CALCULADORA DE CUSTOS (G/ML) E PADRÃO -->
     <div id="tab-calc" class="tab-content">
-        
-        <!-- CUSTO POR PESO / ML -->
         <div class="card-box">
             <h3>⚖️ Calculadora de Custo por Grama/ML</h3>
             <p style="font-size: 12px; color: #666; margin-top: -8px;">Descubra o custo do saquinho medindo tamanho variável.</p>
@@ -439,7 +494,6 @@
             </div>
         </div>
 
-        <!-- CALCULADORA PADRÃO -->
         <div class="card-box">
             <h3>🧮 Calculadora Simples</h3>
             <input type="text" id="calc-display" class="calc-display" readonly value="0">
@@ -467,7 +521,6 @@
                 <button class="calc-btn" onclick="calcInput('.')">.</button>
             </div>
         </div>
-
     </div>
 
 </div>
@@ -487,14 +540,14 @@
         <span class="icon">📦</span>Estoque
     </button>
     <button class="nav-btn" onclick="trocarAba('tab-reservas', this)">
-        <span class="icon">📝</span>Reserva
+        <span class="icon">📝</span>Reservas/Fiados
     </button>
     <button class="nav-btn" onclick="trocarAba('tab-calc', this)">
         <span class="icon">🧮</span>Calc
     </button>
 </div>
 
-<!-- FIREBASE BASE -->
+<!-- FIREBASE INTEGRATION -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -517,7 +570,8 @@
         produtos: [],
         financeiro: { faturamento: 0, receitaCaixa: 0, reserva: 0, lucro: 0 },
         historico: [],
-        reservas: []
+        reservas: [],
+        fiados: []
     };
 
     onValue(dbRef, (snapshot) => {
@@ -527,7 +581,8 @@
                 produtos: val.produtos || [],
                 financeiro: val.financeiro || { faturamento: 0, receitaCaixa: 0, reserva: 0, lucro: 0 },
                 historico: val.historico || [],
-                reservas: val.reservas || []
+                reservas: val.reservas || [],
+                fiados: val.fiados || []
             };
         }
         window.atualizarInterface();
@@ -539,7 +594,6 @@
 </script>
 
 <script>
-    // Converte entrada de texto (aceitando vírgula ou ponto) para float de forma segura
     function parseEntradaFloat(txt) {
         if (!txt) return 0;
         let limpo = txt.toString().replace(',', '.');
@@ -556,6 +610,23 @@
         if (abaId === 'tab-venda') renderizarFormVenda();
         if (abaId === 'tab-reservas') renderizarFormReserva();
         if (abaId === 'tab-estoque') renderizarEstoque();
+    }
+
+    function trocarSubAba(sub) {
+        document.getElementById('btn-sub-reserva').classList.remove('active');
+        document.getElementById('btn-sub-fiado').classList.remove('active');
+        document.getElementById('sub-conteudo-reserva').style.display = 'none';
+        document.getElementById('sub-conteudo-fiado').style.display = 'none';
+
+        if (sub === 'reserva') {
+            document.getElementById('btn-sub-reserva').classList.add('active');
+            document.getElementById('sub-conteudo-reserva').style.display = 'block';
+            renderizarFormReserva();
+        } else {
+            document.getElementById('btn-sub-fiado').classList.add('active');
+            document.getElementById('sub-conteudo-fiado').style.display = 'block';
+            renderizarFormFiado();
+        }
     }
 
     function toggleOpcoesAvancadas() {
@@ -662,11 +733,11 @@
         document.getElementById('lucro-gabriel').innerText = `R$ ${metadeLucro.toFixed(2)}`;
         document.getElementById('lucro-enrico').innerText = `R$ ${metadeLucro.toFixed(2)}`;
 
-        let totalAReceber = 0;
-        if (window.dados.reservas && window.dados.reservas.length > 0) {
-            totalAReceber = window.dados.reservas.reduce((acc, r) => acc + (r.total || 0), 0);
-        }
-        document.getElementById('a-receber-total').innerText = `R$ ${totalAReceber.toFixed(2)}`;
+        // SOMA DO A RECEBER (RESERVAS + FIADOS)
+        let totalReservas = (window.dados.reservas || []).reduce((acc, r) => acc + (r.total || 0), 0);
+        let totalFiados = (window.dados.fiados || []).reduce((acc, f) => acc + (f.total || 0), 0);
+        
+        document.getElementById('a-receber-total').innerText = `R$ ${(totalReservas + totalFiados).toFixed(2)}`;
 
         const listaHist = document.getElementById('lista-historico');
         listaHist.innerHTML = '';
@@ -719,7 +790,7 @@
         });
 
         window.salvarDados();
-        alert('✅ Valor retirado com centavos atualizados!');
+        alert('✅ Valor retirado!');
     }
 
     function excluirHistorico(idx) {
@@ -877,6 +948,7 @@
         }
     }
 
+    /* RENDERIZAÇÃO E LÓGICA DE RESERVAS */
     function renderizarFormReserva() {
         const container = document.getElementById('container-reserva-itens');
         container.innerHTML = '';
@@ -906,7 +978,7 @@
                     <strong>👤 ${res.cliente}</strong><br>
                     <small>${res.itens} - <strong>Total: R$ ${res.total.toFixed(2)}</strong></small>
                     <div style="margin-top:8px;">
-                        <button class="btn-action btn-concluir" onclick="concluirReserva(${idx})">✅ Vender</button>
+                        <button class="btn-action btn-concluir" onclick="concluirReserva(${idx})">✅ Entregar/Vender</button>
                         <button class="btn-action btn-editar" onclick="editarReserva(${idx})">✏️ Editar</button>
                         <button class="btn-action btn-excluir" onclick="excluirReserva(${idx})">🗑️ Excluir</button>
                     </div>
@@ -963,7 +1035,7 @@
         document.getElementById('reserva-cliente').value = '';
         document.getElementById('reserva-desconto').value = '';
         renderizarFormReserva();
-        alert('📌 Reserva salva com sucesso!');
+        alert('📌 Encomenda programada salva!');
     }
 
     function concluirReserva(idx) {
@@ -974,14 +1046,14 @@
             const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             window.dados.historico.push({
                 data: dataAtual,
-                descricao: `Reserva: ${res.cliente} (${res.itens})`,
+                descricao: `Encomenda: ${res.cliente} (${res.itens})`,
                 total: res.total
             });
 
             window.dados.reservas.splice(idx, 1);
             window.salvarDados();
             renderizarFormReserva();
-            alert('🎉 Venda da reserva concluída com sucesso!');
+            alert('🎉 Venda de encomenda concluída!');
         }
     }
 
@@ -1001,7 +1073,7 @@
 
         window.salvarDados();
         renderizarFormReserva();
-        alert('✅ Reserva atualizada!');
+        alert('✅ Encomenda atualizada!');
     }
 
     function excluirReserva(idx) {
@@ -1012,7 +1084,155 @@
         }
     }
 
-    /* CALCULADORA SIMPLE */
+    /* RENDERIZAÇÃO E LÓGICA DE FIADOS */
+    function renderizarFormFiado() {
+        const container = document.getElementById('container-fiado-itens');
+        container.innerHTML = '';
+        
+        window.dados.produtos.forEach((p, idx) => {
+            const div = document.createElement('div');
+            div.className = 'item-carrinho';
+            div.innerHTML = `
+                <span><strong>${p.nome}</strong> (R$ ${p.preco.toFixed(2)}) - Estq: ${p.estoque}</span>
+                <input type="number" min="0" max="${p.estoque}" value="0" onchange="calcularTotalFiado()" id="fiado-qtd-${idx}">
+            `;
+            container.appendChild(div);
+        });
+
+        calcularTotalFiado();
+
+        const divSalvas = document.getElementById('lista-fiados-salvos');
+        divSalvas.innerHTML = '';
+        if (!window.dados.fiados || window.dados.fiados.length === 0) {
+            divSalvas.innerHTML = '<p style="font-size:13px; color:#666;">Nenhum fiado pendente.</p>';
+        } else {
+            window.dados.fiados.forEach((f, idx) => {
+                const box = document.createElement('div');
+                box.style.cssText = "background:#fff3e0; padding:10px; border-radius:6px; margin-top:8px; border-left:4px solid #e65100;";
+                box.innerHTML = `
+                    <strong style="color:#d32f2f;">📌 Devedor: ${f.cliente}</strong><br>
+                    <small>${f.itens} - <strong>Devendo: R$ ${f.total.toFixed(2)}</strong></small>
+                    <div style="margin-top:8px;">
+                        <button class="btn-action btn-concluir" onclick="quitarFiado(${idx})">💵 Quitar / Receber</button>
+                        <button class="btn-action btn-editar" onclick="editarFiado(${idx})">✏️ Editar</button>
+                        <button class="btn-action btn-excluir" onclick="excluirFiado(${idx})">🗑️ Cancelar</button>
+                    </div>
+                `;
+                divSalvas.appendChild(box);
+            });
+        }
+    }
+
+    function calcularTotalFiado() {
+        let total = 0;
+        window.dados.produtos.forEach((p, idx) => {
+            const input = document.getElementById(`fiado-qtd-${idx}`);
+            if (input) {
+                total += (parseInt(input.value) || 0) * p.preco;
+            }
+        });
+
+        document.getElementById('fiado-total-calculado').innerText = total.toFixed(2);
+    }
+
+    function salvarFiado() {
+        const cliente = document.getElementById('fiado-cliente').value.trim();
+        if (!cliente) {
+            alert('Digite o nome da pessoa.');
+            return;
+        }
+
+        let totalSoma = 0;
+        let itens = [];
+        let erroEstoque = false;
+
+        window.dados.produtos.forEach((p, idx) => {
+            const input = document.getElementById(`fiado-qtd-${idx}`);
+            const qtd = parseInt(input.value) || 0;
+            if (qtd > 0) {
+                if (qtd > p.estoque) {
+                    alert(`Estoque insuficiente de ${p.nome}!`);
+                    erroEstoque = true;
+                    return;
+                }
+                totalSoma += qtd * p.preco;
+                itens.push(`${qtd}x ${p.nome}`);
+            }
+        });
+
+        if (erroEstoque) return;
+
+        if (totalSoma === 0) {
+            alert('Selecione pelo menos um item.');
+            return;
+        }
+
+        // BAIXA O ESTOQUE IMEDIATAMENTE
+        window.dados.produtos.forEach((p, idx) => {
+            const input = document.getElementById(`fiado-qtd-${idx}`);
+            const qtd = parseInt(input.value) || 0;
+            if (qtd > 0) {
+                p.estoque -= qtd;
+                p.vendas += qtd;
+            }
+        });
+
+        if (!window.dados.fiados) window.dados.fiados = [];
+        window.dados.fiados.push({ cliente, itens: itens.join(', '), total: totalSoma });
+
+        window.salvarDados();
+        document.getElementById('fiado-cliente').value = '';
+        renderizarFormFiado();
+        alert('📌 Fiado registrado e estoque atualizado com sucesso!');
+    }
+
+    function quitarFiado(idx) {
+        const f = window.dados.fiados[idx];
+        if (confirm(`Confirmar o recebimento do fiado de "${f.cliente}" no valor de R$ ${f.total.toFixed(2)}?`)) {
+            processarEntradaFinanceira(f.total);
+
+            const dataAtual = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            window.dados.historico.push({
+                data: dataAtual,
+                descricao: `Fiado Pago: ${f.cliente} (${f.itens})`,
+                total: f.total
+            });
+
+            window.dados.fiados.splice(idx, 1);
+            window.salvarDados();
+            renderizarFormFiado();
+            alert('💵 Pagamento do fiado recebido com sucesso!');
+        }
+    }
+
+    function editarFiado(idx) {
+        const f = window.dados.fiados[idx];
+        const novoCliente = prompt("Nome da Pessoa:", f.cliente);
+        if (novoCliente === null) return;
+
+        const novosItens = prompt("Descrição dos itens:", f.itens);
+        if (novosItens === null) return;
+
+        const novoTotal = parseEntradaFloat(prompt("Valor Devido (R$):", f.total));
+
+        f.cliente = novoCliente.trim() || f.cliente;
+        f.itens = novosItens.trim() || f.itens;
+        f.total = novoTotal;
+
+        window.salvarDados();
+        renderizarFormFiado();
+        alert('✅ Registro de fiado atualizado!');
+    }
+
+    function excluirFiado(idx) {
+        if (confirm("Deseja cancelar este fiado? (Atenção: Os produtos já foram baixados do estoque anteriormente).")) {
+            window.dados.fiados.splice(idx, 1);
+            window.salvarDados();
+            renderizarFormFiado();
+        }
+    }
+
+    /* CALCULADORA SIMPLES */
     let calcVal = "0";
 
     function calcInput(char) {
